@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request
 import spacy
 from collections import Counter
 
@@ -6,9 +6,7 @@ app = Flask(__name__)
 
 nlp = spacy.load("en_core_web_sm")
 
-top_n = 10
-
-def analyze_text():
+def analyze_text(top_n=10):
     file_name = "Edited-Extract3_2025.txt"
 
     with open(file_name, "r", encoding="utf-8") as f:
@@ -75,20 +73,37 @@ def analyze_text():
     }
     
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
-    results = analyze_text()
+    # Get number from URL query parameter
+    top_n = request.args.get("top_n", default=10, type=int)
+
+    # If user enters 0 or negative number, reset to default
+    if top_n <= 0:
+        top_n = 10
+
+    results = analyze_text(top_n)
 
     return render_template_string("""
     <h1>Speech Analysis Results</h1>
-                                  
+
     <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
+    
+    <form method="get">
+        <label>Enter number of top results:</label>
+        <input type="number" name="top_n" min="1" placeholder="10">
+        <button type="submit">Update</button>
+    </form>
+
+    <p><strong>Currently showing:</strong> {{ results.top_n }}</p>
+
 
     <h2>Overall Statistics</h2>
     <p>Total Sentences: {{ results.sentences }}</p>
     <p>Total Words: {{ results.words }}</p>
     <p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
     <p>Average MDD: {{ results.average_mdd }}</p>
+
 
     <h2>{{ results.top_n }} Most Common Words</h2>
     <ul>
