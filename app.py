@@ -107,6 +107,8 @@ def home():
         <input type="file" name="file" accept=".txt">
         <button type="submit">Analyze File</button>
     </form>
+                                  
+    <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
 
     <form method="get">
         <label>Number of top results:</label>
@@ -115,7 +117,6 @@ def home():
     </form>
 
     <p><strong>Currently showing:</strong> {{ results.top_n }}</p>
-    <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
 
     <h2>Overall Statistics</h2>
     <p>Total Sentences: {{ results.sentences }}</p>
