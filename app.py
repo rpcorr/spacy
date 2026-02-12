@@ -6,11 +6,8 @@ app = Flask(__name__)
 
 nlp = spacy.load("en_core_web_sm")
 
-def analyze_text(top_n=10):
-    file_name = "Edited-Extract3_2025.txt"
-
-    with open(file_name, "r", encoding="utf-8") as f:
-        text = f.read()
+def analyze_text(text, file_name, top_n=10):
+    
 
     doc = nlp(text)
 
@@ -73,7 +70,7 @@ def analyze_text(top_n=10):
     }
     
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
 def home():
     # Get number from URL query parameter
     top_n = request.args.get("top_n", default=10, type=int)
@@ -82,21 +79,43 @@ def home():
     if top_n <= 0:
         top_n = 10
 
-    results = analyze_text(top_n)
+    # Default file
+    default_file = "Extract1_2016.txt"
+
+    if request.method == "POST" and "file" in request.files:
+        uploaded_file = request.files["file"]
+
+        if uploaded_file.filename != "":
+            text = uploaded_file.read().decode("utf-8")
+            file_name = uploaded_file.filename
+        else:
+            with open(default_file, "r", encoding="utf-8") as f:
+                text = f.read()
+            file_name = default_file
+    else:
+        with open(default_file, "r", encoding="utf-8") as f:
+            text = f.read()
+        file_name = default_file
+
+    results = analyze_text(text, file_name, top_n)
 
     return render_template_string("""
     <h1>Speech Analysis Results</h1>
 
-    <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
-    
+    <form method="post" enctype="multipart/form-data">
+        <label>Upload a .txt speech file:</label>
+        <input type="file" name="file" accept=".txt">
+        <button type="submit">Analyze File</button>
+    </form>
+
     <form method="get">
-        <label>Enter number of top results:</label>
+        <label>Number of top results:</label>
         <input type="number" name="top_n" min="1" placeholder="10">
         <button type="submit">Update</button>
     </form>
 
     <p><strong>Currently showing:</strong> {{ results.top_n }}</p>
-
+    <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
 
     <h2>Overall Statistics</h2>
     <p>Total Sentences: {{ results.sentences }}</p>
