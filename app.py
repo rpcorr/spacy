@@ -7,7 +7,9 @@ app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
 
 def analyze_text():
-    with open("Edited-Extract3_2025.txt", "r", encoding="utf-8") as f:
+    file_name = "Edited-Extract3_2025.txt"
+
+    with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
     doc = nlp(text)
@@ -18,7 +20,7 @@ def analyze_text():
     # Average sentence length
     avg_sentence_length = len(words) / len(sentences)
 
-    # MDD
+    # MDD Calculation
     mdd_list = []
     for sent in sentences:
         distances = [abs(token.i - token.head.i) for token in sent if token.is_alpha]
@@ -47,6 +49,7 @@ def analyze_text():
     bigram_counts = Counter(bigrams).most_common(10)
 
     return {
+        "file_name": file_name,
         "sentences": len(sentences),
         "words": len(words),
         "avg_sentence_length": round(avg_sentence_length, 2),
@@ -63,6 +66,8 @@ def home():
 
     return render_template_string("""
     <h1>Speech Analysis Results</h1>
+                                  
+    <p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
 
     <h2>Overall Statistics</h2>
     <p>Total Sentences: {{ results.sentences }}</p>
