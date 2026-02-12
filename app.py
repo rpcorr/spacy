@@ -80,6 +80,7 @@ def home():
 <head>
     <title>Speech Analysis</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
 <h1>Speech Analysis Results</h1>
@@ -120,6 +121,9 @@ def home():
 <canvas id="entitiesChart" width="400" height="200"></canvas>
 
 <script>
+// Register the Data Labels plugin
+Chart.register(ChartDataLabels);
+
 // Convert Python data to JS
 const commonWordsLabels = {{ results.common_words | map(attribute=0) | list | safe }};
 const commonWordsCounts = {{ results.common_words | map(attribute=1) | list | safe }};
@@ -133,28 +137,49 @@ const bigramsCounts = {{ results.bigrams | map(attribute=1) | list | safe }};
 const entitiesLabels = {{ results.entities | map(attribute=0) | list | safe }};
 const entitiesCounts = {{ results.entities | map(attribute=1) | list | safe }};
 
+// Chart options to show numbers on bars
+const chartOptions = {
+    plugins: {
+        datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: 'black',
+            font: { weight: 'bold' },
+            formatter: (value) => value
+        }
+    },
+    responsive: true,
+    scales: {
+        y: { beginAtZero: true }
+    }
+};
+
 // Words Chart
 new Chart(document.getElementById('wordsChart'), {
     type: 'bar',
-    data: { labels: commonWordsLabels, datasets: [{ label: 'Count', data: commonWordsCounts, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] }
+    data: { labels: commonWordsLabels, datasets: [{ label: 'Count', data: commonWordsCounts, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] },
+    options: chartOptions
 });
 
 // Pronouns Chart
 new Chart(document.getElementById('pronounsChart'), {
     type: 'bar',
-    data: { labels: pronounsLabels, datasets: [{ label: 'Count', data: pronounsCounts, backgroundColor: 'rgba(255, 99, 132, 0.6)' }] }
+    data: { labels: pronounsLabels, datasets: [{ label: 'Count', data: pronounsCounts, backgroundColor: 'rgba(255, 99, 132, 0.6)' }] },
+    options: chartOptions
 });
 
 // Bigrams Chart
 new Chart(document.getElementById('bigramsChart'), {
     type: 'bar',
-    data: { labels: bigramsLabels, datasets: [{ label: 'Count', data: bigramsCounts, backgroundColor: 'rgba(255, 206, 86, 0.6)' }] }
+    data: { labels: bigramsLabels, datasets: [{ label: 'Count', data: bigramsCounts, backgroundColor: 'rgba(255, 206, 86, 0.6)' }] },
+    options: chartOptions
 });
 
 // Entities Chart
 new Chart(document.getElementById('entitiesChart'), {
     type: 'bar',
-    data: { labels: entitiesLabels, datasets: [{ label: 'Count', data: entitiesCounts, backgroundColor: 'rgba(75, 192, 192, 0.6)' }] }
+    data: { labels: entitiesLabels, datasets: [{ label: 'Count', data: entitiesCounts, backgroundColor: 'rgba(75, 192, 192, 0.6)' }] },
+    options: chartOptions
 });
 </script>
 
