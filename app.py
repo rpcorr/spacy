@@ -50,6 +50,12 @@ def analyze_text():
     bigrams = zip(lemmas, lemmas[1:])
     bigram_counts = Counter(bigrams).most_common(top_n)
 
+    # Sum of counts
+    common_words_total = sum(count for _, count in common_words)
+    entity_counts_total = sum(count for _, count in entity_counts)
+    pronouns_total = sum(count for _, count in pronoun_counts)
+    bigrams_total = sum(count for _, count in bigram_counts)
+
     return {
         "file_name": file_name,
         "top_n": top_n,
@@ -58,10 +64,16 @@ def analyze_text():
         "avg_sentence_length": round(avg_sentence_length, 2),
         "average_mdd": round(average_mdd, 2),
         "common_words": common_words,
+        "common_words_total": common_words_total,
         "entities": entity_counts,
+        "entities_total": entity_counts_total,
         "pronouns": pronoun_counts,
-        "bigrams": bigram_counts
+        "pronouns_total": pronouns_total,
+        "bigrams": bigram_counts,
+        "bigrams_total": bigrams_total,
+        "bigrams_total": bigrams_total
     }
+    
 
 @app.route("/")
 def home():
@@ -84,6 +96,8 @@ def home():
         <li>{{ word }} — {{ count }}</li>
     {% endfor %}
     </ul>
+                                  
+    <p><strong>Total Common Words:</strong> {{ results.common_words_total }}</p>
 
     <h2>{{ results.top_n }} Top Entities</h2>
     <ul>
@@ -91,6 +105,8 @@ def home():
         <li>{{ ent }} — {{ count }}</li>
     {% endfor %}
     </ul>
+                                  
+    <p><strong>Total Entities:</strong> {{ results.entities_total }}</p>
 
     <h2>{{ results.top_n }} Most Pronouns</h2>
     <ul>
@@ -98,6 +114,8 @@ def home():
         <li>{{ pronoun }} — {{ count }}</li>
     {% endfor %}
     </ul>
+                                  
+    <p><strong>Total Pronouns:</strong> {{ results.pronouns_total }}</p>
 
     <h2>{{ results.top_n }} Common Phrases</h2>
     <ul>
@@ -105,6 +123,8 @@ def home():
         <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
     {% endfor %}
     </ul>
+                                  
+    <p><strong>Total Common Phrases:</strong> {{ results.bigrams_total }}</p>
     """, results=results)
 
 if __name__ == "__main__":
