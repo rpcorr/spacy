@@ -38,6 +38,13 @@ def analyze_text(text, file_name, top_n=10):
     bigrams = zip(lemmas, lemmas[1:])
     bigram_counts = Counter(bigrams).most_common(top_n)
 
+    # Totals
+    common_words_total = sum(count for _, count in common_words)
+    entities_total = sum(count for _, count in entity_counts)
+    pronouns_total = sum(count for _, count in pronoun_counts)
+    bigrams_total = sum(count for _, count in bigram_counts)
+
+
     return {
         "file_name": file_name,
         "top_n": top_n,
@@ -46,10 +53,14 @@ def analyze_text(text, file_name, top_n=10):
         "avg_sentence_length": round(avg_sentence_length, 2),
         "average_mdd": round(average_mdd, 2),
         "common_words": common_words,
+        "common_words_total": common_words_total,
         "entities": entity_counts,
+        "entities_total": entities_total,
         "entity_labels": entity_labels,
         "pronouns": pronoun_counts,
-        "bigrams": bigram_counts
+        "pronouns_total": pronouns_total,
+        "bigrams": bigram_counts,
+        "bigrams_total": bigrams_total
     }
 
 @app.route("/", methods=["GET", "POST"])
