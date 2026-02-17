@@ -108,19 +108,71 @@ def home():
 <p>Total Words: {{ results.words }}</p>
 <p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
 <p>Average MDD: {{ results.average_mdd }}</p>
+                                  
+<h3>View Mode:</h3>
+<label>
+    <input type="radio" name="viewMode" value="list" checked onclick="toggleView()"> List View
+</label>
+<label>
+    <input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View
+</label>
 
-<!-- Charts -->
-<h2>{{ results.top_n }} Most Common Words (Chart)</h2>
-<canvas id="wordsChart" width="400" height="200"></canvas>
+                                  
+<div id="listView">
+    <!-- ALL your list-based HTML goes here -->
+        <h2>{{ results.top_n }} Most Common Words</h2>
+    <ul>
+    {% for word, count in results.common_words %}
+        <li>{{ word }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+                                  
+    <p><strong>Total Common Words:</strong> {{ results.common_words_total }}</p>
 
-<h2>{{ results.top_n }} Most Pronouns (Chart)</h2>
-<canvas id="pronounsChart" width="400" height="200"></canvas>
+    <h2>{{ results.top_n }} Top Entities</h2>
+    <ul>
+    {% for ent, count in results.entities %}
+        <li>{{ ent }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+                                  
+    <p><strong>Total Entities:</strong> {{ results.entities_total }}</p>
 
-<h2>{{ results.top_n }} Common Phrases (Chart)</h2>
-<canvas id="bigramsChart" width="400" height="200"></canvas>
+    <h2>{{ results.top_n }} Most Pronouns</h2>
+    <ul>
+    {% for pronoun, count in results.pronouns %}
+        <li>{{ pronoun }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+                                  
+    <p><strong>Total Pronouns:</strong> {{ results.pronouns_total }}</p>
 
-<h2>{{ results.top_n }} Top Entities (Chart)</h2>
-<canvas id="entitiesChart" width="400" height="200"></canvas>
+    <h2>{{ results.top_n }} Common Phrases</h2>
+    <ul>
+    {% for phrase, count in results.bigrams %}
+        <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+                                  
+    <p><strong>Total Common Phrases:</strong> {{ results.bigrams_total }}</p>
+</div>
+
+<div id="chartView" style="display:none;">
+    <!-- ALL your chart canvases go here -->
+    <!-- Charts -->
+    <h2>{{ results.top_n }} Most Common Words (Chart)</h2>
+    <canvas id="wordsChart" width="400" height="200"></canvas>
+
+    <h2>{{ results.top_n }} Most Pronouns (Chart)</h2>
+    <canvas id="pronounsChart" width="400" height="200"></canvas>
+
+    <h2>{{ results.top_n }} Common Phrases (Chart)</h2>
+    <canvas id="bigramsChart" width="400" height="200"></canvas>
+
+    <h2>{{ results.top_n }} Top Entities (Chart)</h2>
+    <canvas id="entitiesChart" width="400" height="200"></canvas>
+
+</div>
 
 <script>
 // Register the Data Labels plugin
@@ -183,6 +235,18 @@ new Chart(document.getElementById('entitiesChart'), {
     data: { labels: entitiesLabels, datasets: [{ label: 'Count', data: entitiesCounts, backgroundColor: 'rgba(75, 192, 192, 0.6)' }] },
     options: chartOptions
 });
+
+function toggleView() {
+    const selected = document.querySelector('input[name="viewMode"]:checked').value;
+
+    if (selected === "list") {
+        document.getElementById("listView").style.display = "block";
+        document.getElementById("chartView").style.display = "none";
+    } else {
+        document.getElementById("listView").style.display = "none";
+        document.getElementById("chartView").style.display = "block";
+    }
+}
 </script>
 
 </body>
