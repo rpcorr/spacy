@@ -28,6 +28,7 @@ def analyze_text(text, file_name, top_n=10):
 
     # Entities
     entity_counts = Counter([(ent.text, ent.label_) for ent in doc.ents]).most_common(top_n)
+    entity_labels = [f"{ent[0]} ({ent[1]})" for ent, _ in entity_counts]
 
     # Pronouns
     pronouns = [token.text.lower() for token in doc if token.pos_ == "PRON"]
@@ -46,6 +47,7 @@ def analyze_text(text, file_name, top_n=10):
         "average_mdd": round(average_mdd, 2),
         "common_words": common_words,
         "entities": entity_counts,
+        "entity_labels": entity_labels,
         "pronouns": pronoun_counts,
         "bigrams": bigram_counts
     }
@@ -134,7 +136,7 @@ const pronounsCounts = {{ results.pronouns | map(attribute=1) | list | safe }};
 const bigramsLabels = {{ results.bigrams | map(attribute=0) | map('join', ' ') | list | safe }};
 const bigramsCounts = {{ results.bigrams | map(attribute=1) | list | safe }};
 
-const entitiesLabels = {{ results.entities | map(attribute=0) | list | safe }};
+const entitiesLabels = {{ results.entity_labels | safe }};
 const entitiesCounts = {{ results.entities | map(attribute=1) | list | safe }};
 
 // Chart options to show numbers on bars
