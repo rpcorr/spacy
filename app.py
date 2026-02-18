@@ -169,7 +169,115 @@ Top N: <input type="number" name="top_n" value="{{ top_n }}" min="1">
 <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
 </div>
 
+
+<!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
+<div class="grid grid-2">
+
+<!-- COMMON WORDS CARD -->
+<div class="card">
+<h3>Top {{ top_n }} Common Words</h3>
+<div style="display:flex; gap:40px;">
+<div>
+<strong>{{ results1.file_name }}</strong>
+<ul>
+{% for word, count in results1.common_words %}
+<li>{{ word }} — {{ count }}</li>
+{% endfor %}
+</ul>
 </div>
+
+<div>
+<strong>{{ results2.file_name }}</strong>
+<ul>
+{% for word, count in results2.common_words %}
+<li>{{ word }} — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+
+<!-- ENTITIES CARD -->
+<div class="card">
+<h3>Top {{ top_n }} Entities</h3>
+<div style="display:flex; gap:40px;">
+<div>
+<strong>{{ results1.file_name }}</strong>
+<ul>
+{% for ent, count in results1.entities %}
+<li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+
+<div>
+<strong>{{ results2.file_name }}</strong>
+<ul>
+{% for ent, count in results2.entities %}
+<li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+
+<!-- PRONOUNS CARD -->
+<div class="card">
+<h3>Top {{ top_n }} Pronouns</h3>
+<div style="display:flex; gap:40px;">
+<div>
+<strong>{{ results1.file_name }}</strong>
+<ul>
+{% for word, count in results1.pronouns %}
+<li>{{ word }} — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+
+<div>
+<strong>{{ results2.file_name }}</strong>
+<ul>
+{% for word, count in results2.pronouns %}
+<li>{{ word }} — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+
+<!-- COMMON PHRASES CARD -->
+<div class="card">
+<h3>Top {{ top_n }} Common Phrases (Bigrams)</h3>
+<div style="display:flex; gap:40px;">
+<div>
+<strong>{{ results1.file_name }}</strong>
+<ul>
+{% for phrase, count in results1.bigrams %}
+<li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+
+<div>
+<strong>{{ results2.file_name }}</strong>
+<ul>
+{% for phrase, count in results2.bigrams %}
+<li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+</div>
+
 
 <div id="chartView" style="display:none;">
 
@@ -214,7 +322,7 @@ Top N: <input type="number" name="top_n" value="{{ top_n }}" min="1">
 </div>
 
 <div class="card">
-<h2>Bigrams</h2>
+<h2>Common Phrases (Bigrams)</h2>
 <canvas id="bigramsChart"></canvas>
 </div>
 
