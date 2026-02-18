@@ -324,29 +324,41 @@ function createChart(id, labels, data, colour) {
     });
 }
 
+// Words Chart
 createChart("wordsChart",
     {{ results.common_words | map(attribute=0) | list | safe }},
     {{ results.common_words | map(attribute=1) | list | safe }},
     "rgba(54,162,235,0.6)"
 );
 
+// Entities Chart
 createChart("entitiesChart",
     {{ results.entity_labels | safe }},
     {{ results.entities | map(attribute=1) | list | safe }},
     "rgba(75,192,192,0.6)"
 );
 
+// Pronouns Chart
 createChart("pronounsChart",
     {{ results.pronouns | map(attribute=0) | list | safe }},
     {{ results.pronouns | map(attribute=1) | list | safe }},
     "rgba(255,99,132,0.6)"
 );
 
-createChart("bigramsChart",
-    {{ results.bigrams | map(attribute=0) | map('join',' ') | list | safe }},
-    {{ results.bigrams | map(attribute=1) | list | safe }},
-    "rgba(255,206,86,0.6)"
-);
+// Common Phrases Chart
+const bigramsLabels = {{ results.bigrams | map(attribute=0) | map('join',' ') | list | safe }};
+const bigramsData = {{ results.bigrams | map(attribute=1) | list | safe }};
+const bigramsMax = Math.max(...bigramsData);
+const bigramsChartOptions = {
+    ...chartOptions,
+    scales: { y: { beginAtZero: true, suggestedMax: bigramsMax + 0.5 } }
+};
+
+new Chart(document.getElementById("bigramsChart"), {
+    type: 'bar',
+    data: { labels: bigramsLabels, datasets: [{ label: "Count", data: bigramsData, backgroundColor: "rgba(255,206,86,0.6)" }] },
+    options: bigramsChartOptions
+});
 
 function toggleView() {
     const selected = document.querySelector('input[name="viewMode"]:checked').value;
