@@ -121,6 +121,18 @@ h1 {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 20px;
 }
+.chart-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+}
+.chart-total {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #2c3e50;
+}                            
 .grid {
     display: grid;
     gap: 20px;
@@ -258,11 +270,33 @@ canvas {
 </div>
 
 <div id="chartView" style="display:none;">
-<div class="card"><h2>Common Words</h2><canvas id="wordsChart"></canvas></div>
-<div class="card"><h2>Entities</h2><canvas id="entitiesChart"></canvas></div>
-<div class="card"><h2>Pronouns</h2><canvas id="pronounsChart"></canvas></div>
-<div class="card"><h2>Common Phrases</h2><canvas id="bigramsChart"></canvas></div>
+
+    <div class="chart-card">
+        <h2>Common Words</h2>
+        <p class="chart-total">Total: {{ results.common_words_total }}</p>
+        <canvas id="wordsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h2>Entities</h2>
+        <p class="chart-total">Total: {{ results.entities_total }}</p>
+        <canvas id="entitiesChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h2>Pronouns</h2>
+        <p class="chart-total">Total: {{ results.pronouns_total }}</p>
+        <canvas id="pronounsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h2>Common Phrases</h2>
+        <p class="chart-total">Total: {{ results.bigrams_total }}</p>
+        <canvas id="bigramsChart"></canvas>
+    </div>
+
 </div>
+
 
 </div>
 
