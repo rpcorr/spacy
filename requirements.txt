@@ -1,5 +1,5 @@
 Flask==3.0.2
 gunicorn==21.2.0
 spacy==3.7.4
-blis==0.7.9 
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+blis==0.7.9
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
