@@ -12,7 +12,7 @@ def analyze_text(text, file_name, top_n=10):
     sentences = list(doc.sents)
     words = [t for t in doc if t.is_alpha]
 
-    avg_sentence_length = len(words) / len(sentences)
+    avg_sentence_length = len(words) / len(sentences) if sentences else 0
 
     # MDD Calculation
     mdd_list = []
@@ -20,7 +20,7 @@ def analyze_text(text, file_name, top_n=10):
         distances = [abs(token.i - token.head.i) for token in sent if token.is_alpha]
         if distances:
             mdd_list.append(max(distances))
-    average_mdd = sum(mdd_list) / len(mdd_list)
+    average_mdd = sum(mdd_list) / len(mdd_list) if mdd_list else 0
 
     # Common words
     lemmas = [token.lemma_.lower() for token in doc if token.is_alpha and not token.is_stop]
@@ -35,7 +35,7 @@ def analyze_text(text, file_name, top_n=10):
     pronoun_counts = Counter(pronouns).most_common(top_n)
 
     # Bigrams
-    bigrams = zip(lemmas, lemmas[1:])
+    bigrams = list(zip(lemmas, lemmas[1:]))
     bigram_counts = Counter(bigrams).most_common(top_n)
 
     # Totals
@@ -43,7 +43,6 @@ def analyze_text(text, file_name, top_n=10):
     entities_total = sum(count for _, count in entity_counts)
     pronouns_total = sum(count for _, count in pronoun_counts)
     bigrams_total = sum(count for _, count in bigram_counts)
-
 
     return {
         "file_name": file_name,
@@ -91,185 +90,200 @@ def home():
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Speech Analysis</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-</head>
-<body>
-<h1>Speech Analysis Results</h1>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speech Analysis Dashboard</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #f4f6f9;
+    color: #2c3e50;
+}
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+.grid {
+    display: grid;
+    gap: 20px;
+}
+.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+.stats p { margin: 6px 0; font-weight: 500; }
+form { margin-bottom: 10px; }
+input, button {
+    padding: 8px;
+    border-radius: 6px;
+}
+input { border: 1px solid #ccc; }
+button {
+    border: none;
+    background: #3b82f6;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+button:hover { background: #2563eb; }
+.view-toggle {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+}
+canvas {
+    width: 100% !important;
+    height: 350px !important;
+}
+@media (max-width: 600px) {
+    h1 { font-size: 22px; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Speech Analysis Dashboard</h1>
+
+<div class="card">
 <form method="post" enctype="multipart/form-data">
     <label>Upload a .txt speech file:</label>
     <input type="file" name="file" accept=".txt">
-    <button type="submit">Analyze File</button>
+    <button type="submit">Analyze</button>
 </form>
 
-<p><strong>File Analyzed:</strong> {{ results.file_name }}</p>
-
 <form method="get">
-    <label>Number of top results:</label>
-    <input type="number" name="top_n" min="1" placeholder="10">
+    <label>Top Results:</label>
+    <input type="number" name="top_n" min="1" value="{{ results.top_n }}">
     <button type="submit">Update</button>
 </form>
 
-<p><strong>Currently showing:</strong> {{ results.top_n }}</p>
+<p><strong>File:</strong> {{ results.file_name }}</p>
+</div>
 
+<div class="grid grid-2">
+<div class="card stats">
 <h2>Overall Statistics</h2>
-
-<div id="statsBlock">
-    <p>Total Sentences: {{ results.sentences }}</p>
-    <p>Total Words: {{ results.words }}</p>
-    <p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
-    <p>Average MDD: {{ results.average_mdd }}</p>
+<p>Total Sentences: {{ results.sentences }}</p>
+<p>Total Words: {{ results.words }}</p>
+<p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
+<p>Average MDD: {{ results.average_mdd }}</p>
 </div>
-                                  
-<div id="totalsBlock">
-    <p>Common Words: {{ results.common_words_total }}</p>
-    <p>Entities: {{ results.entities_total }}</p>
-    <p>Pronouns: {{ results.pronouns_total }}</p>
-    <p>Common Phrases: {{ results.bigrams_total }}</p>
+
+<div class="card stats">
+<h2>Category Totals</h2>
+<p>Common Words: {{ results.common_words_total }}</p>
+<p>Entities: {{ results.entities_total }}</p>
+<p>Pronouns: {{ results.pronouns_total }}</p>
+<p>Common Phrases: {{ results.bigrams_total }}</p>
 </div>
-                                  
-<hr>
-                                  
-<h3>View Mode:</h3>
-<label>
-    <input type="radio" name="viewMode" value="list" checked onclick="toggleView()"> List View
-</label>
-<label>
-    <input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View
-</label>
-                                  
-<div id="listView">
-        <h2>{{ results.top_n }} Most Common Words</h2>
-    <ul>
-    {% for word, count in results.common_words %}
-        <li>{{ word }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
+</div>
 
-    <h2>{{ results.top_n }} Top Entities</h2>
-    <ul>
-    {% for ent, count in results.entities %}
-        <li>{{ ent }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    
-    <h2>{{ results.top_n }} Most Pronouns</h2>
-    <ul>
-    {% for pronoun, count in results.pronouns %}
-        <li>{{ pronoun }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
+<div class="view-toggle">
+<label><input type="radio" name="viewMode" value="list" checked onclick="toggleView()"> List View</label>
+<label><input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View</label>
+</div>
 
-    <h2>{{ results.top_n }} Common Phrases</h2>
-    <ul>
-    {% for phrase, count in results.bigrams %}
-        <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
+<div id="listView" class="card">
+<h2>Top {{ results.top_n }} Common Words</h2>
+<ul>{% for word, count in results.common_words %}<li>{{ word }} — {{ count }}</li>{% endfor %}</ul>
+
+<h2>Top {{ results.top_n }} Entities</h2>
+<ul>{% for ent, count in results.entities %}<li>{{ ent }} — {{ count }}</li>{% endfor %}</ul>
+
+<h2>Top {{ results.top_n }} Pronouns</h2>
+<ul>{% for p, c in results.pronouns %}<li>{{ p }} — {{ c }}</li>{% endfor %}</ul>
+
+<h2>Top {{ results.top_n }} Common Phrases</h2>
+<ul>{% for phrase, c in results.bigrams %}<li>{{ phrase[0] }} {{ phrase[1] }} — {{ c }}</li>{% endfor %}</ul>
 </div>
 
 <div id="chartView" style="display:none;">
-    <!-- ALL your chart canvases go here -->
-    <!-- Charts -->
-    <h2>{{ results.top_n }} Most Common Words (Chart)</h2>
-    <canvas id="wordsChart" width="400" height="200"></canvas>
-                                  
-    <hr>
-                                  
-    <h2>{{ results.top_n }} Top Entities (Chart)</h2>
-    <canvas id="entitiesChart" width="400" height="200"></canvas>
-                                  
-    <hr>
+<div class="card"><h2>Common Words</h2><canvas id="wordsChart"></canvas></div>
+<div class="card"><h2>Entities</h2><canvas id="entitiesChart"></canvas></div>
+<div class="card"><h2>Pronouns</h2><canvas id="pronounsChart"></canvas></div>
+<div class="card"><h2>Common Phrases</h2><canvas id="bigramsChart"></canvas></div>
+</div>
 
-    <h2>{{ results.top_n }} Most Pronouns (Chart)</h2>
-    <canvas id="pronounsChart" width="400" height="200"></canvas>
-                                  
-    <hr>
-
-    <h2>{{ results.top_n }} Common Phrases (Chart)</h2>
-    <canvas id="bigramsChart" width="400" height="200"></canvas>
 </div>
 
 <script>
-// Register the Data Labels plugin
 Chart.register(ChartDataLabels);
 
-// Convert Python data to JS
-const commonWordsLabels = {{ results.common_words | map(attribute=0) | list | safe }};
-const commonWordsCounts = {{ results.common_words | map(attribute=1) | list | safe }};
-
-const pronounsLabels = {{ results.pronouns | map(attribute=0) | list | safe }};
-const pronounsCounts = {{ results.pronouns | map(attribute=1) | list | safe }};
-
-const bigramsLabels = {{ results.bigrams | map(attribute=0) | map('join', ' ') | list | safe }};
-const bigramsCounts = {{ results.bigrams | map(attribute=1) | list | safe }};
-
-const entitiesLabels = {{ results.entity_labels | safe }};
-const entitiesCounts = {{ results.entities | map(attribute=1) | list | safe }};
-
-// Chart options to show numbers on bars
 const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
         datalabels: {
             anchor: 'end',
             align: 'end',
-            color: 'black',
-            font: { weight: 'bold' },
-            formatter: (value) => value
+            font: { weight: 'bold' }
         }
     },
-    responsive: true,
-    scales: {
-        y: { beginAtZero: true }
-    }
+    scales: { y: { beginAtZero: true } }
 };
 
-// Words Chart
-new Chart(document.getElementById('wordsChart'), {
-    type: 'bar',
-    data: { labels: commonWordsLabels, datasets: [{ label: 'Count', data: commonWordsCounts, backgroundColor: 'rgba(54, 162, 235, 0.6)' }] },
-    options: chartOptions
-});
+function createChart(id, labels, data, colour) {
+    new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: "Count", data: data, backgroundColor: colour }] },
+        options: chartOptions
+    });
+}
 
-// Pronouns Chart
-new Chart(document.getElementById('pronounsChart'), {
-    type: 'bar',
-    data: { labels: pronounsLabels, datasets: [{ label: 'Count', data: pronounsCounts, backgroundColor: 'rgba(255, 99, 132, 0.6)' }] },
-    options: chartOptions
-});
+createChart("wordsChart",
+    {{ results.common_words | map(attribute=0) | list | safe }},
+    {{ results.common_words | map(attribute=1) | list | safe }},
+    "rgba(54,162,235,0.6)"
+);
 
-// Bigrams Chart
-new Chart(document.getElementById('bigramsChart'), {
-    type: 'bar',
-    data: { labels: bigramsLabels, datasets: [{ label: 'Count', data: bigramsCounts, backgroundColor: 'rgba(255, 206, 86, 0.6)' }] },
-    options: chartOptions
-});
+createChart("entitiesChart",
+    {{ results.entity_labels | safe }},
+    {{ results.entities | map(attribute=1) | list | safe }},
+    "rgba(75,192,192,0.6)"
+);
 
-// Entities Chart
-new Chart(document.getElementById('entitiesChart'), {
-    type: 'bar',
-    data: { labels: entitiesLabels, datasets: [{ label: 'Count', data: entitiesCounts, backgroundColor: 'rgba(75, 192, 192, 0.6)' }] },
-    options: chartOptions
-});
+createChart("pronounsChart",
+    {{ results.pronouns | map(attribute=0) | list | safe }},
+    {{ results.pronouns | map(attribute=1) | list | safe }},
+    "rgba(255,99,132,0.6)"
+);
+
+createChart("bigramsChart",
+    {{ results.bigrams | map(attribute=0) | map('join',' ') | list | safe }},
+    {{ results.bigrams | map(attribute=1) | list | safe }},
+    "rgba(255,206,86,0.6)"
+);
 
 function toggleView() {
     const selected = document.querySelector('input[name="viewMode"]:checked').value;
-
-    if (selected === "list") {
-        document.getElementById("listView").style.display = "block";
-        document.getElementById("chartView").style.display = "none";
-    } else {
-        document.getElementById("listView").style.display = "none";
-        document.getElementById("chartView").style.display = "block";
-    }
+    document.getElementById("listView").style.display = selected === "list" ? "block" : "none";
+    document.getElementById("chartView").style.display = selected === "chart" ? "block" : "none";
 }
 </script>
 
 </body>
 </html>
 """, results=results)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
