@@ -115,10 +115,22 @@ def home():
 <p><strong>Currently showing:</strong> {{ results.top_n }}</p>
 
 <h2>Overall Statistics</h2>
-<p>Total Sentences: {{ results.sentences }}</p>
-<p>Total Words: {{ results.words }}</p>
-<p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
-<p>Average MDD: {{ results.average_mdd }}</p>
+
+<div id="statsBlock">
+    <p>Total Sentences: {{ results.sentences }}</p>
+    <p>Total Words: {{ results.words }}</p>
+    <p>Average Sentence Length: {{ results.avg_sentence_length }}</p>
+    <p>Average MDD: {{ results.average_mdd }}</p>
+</div>
+                                  
+<div id="totalsBlock">
+    <p>Common Words: {{ results.common_words_total }}</p>
+    <p>Entities: {{ results.entities_total }}</p>
+    <p>Pronouns: {{ results.pronouns_total }}</p>
+    <p>Common Phrases: {{ results.bigrams_total }}</p>
+</div>
+                                  
+<hr>
                                   
 <h3>View Mode:</h3>
 <label>
@@ -127,18 +139,14 @@ def home():
 <label>
     <input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View
 </label>
-
                                   
 <div id="listView">
-    <!-- ALL your list-based HTML goes here -->
         <h2>{{ results.top_n }} Most Common Words</h2>
     <ul>
     {% for word, count in results.common_words %}
         <li>{{ word }} — {{ count }}</li>
     {% endfor %}
     </ul>
-                                  
-    <p><strong>Total Common Words:</strong> {{ results.common_words_total }}</p>
 
     <h2>{{ results.top_n }} Top Entities</h2>
     <ul>
@@ -146,17 +154,13 @@ def home():
         <li>{{ ent }} — {{ count }}</li>
     {% endfor %}
     </ul>
-                                  
-    <p><strong>Total Entities:</strong> {{ results.entities_total }}</p>
-
+    
     <h2>{{ results.top_n }} Most Pronouns</h2>
     <ul>
     {% for pronoun, count in results.pronouns %}
         <li>{{ pronoun }} — {{ count }}</li>
     {% endfor %}
     </ul>
-                                  
-    <p><strong>Total Pronouns:</strong> {{ results.pronouns_total }}</p>
 
     <h2>{{ results.top_n }} Common Phrases</h2>
     <ul>
@@ -164,8 +168,6 @@ def home():
         <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
     {% endfor %}
     </ul>
-                                  
-    <p><strong>Total Common Phrases:</strong> {{ results.bigrams_total }}</p>
 </div>
 
 <div id="chartView" style="display:none;">
@@ -173,16 +175,21 @@ def home():
     <!-- Charts -->
     <h2>{{ results.top_n }} Most Common Words (Chart)</h2>
     <canvas id="wordsChart" width="400" height="200"></canvas>
+                                  
+    <hr>
+                                  
+    <h2>{{ results.top_n }} Top Entities (Chart)</h2>
+    <canvas id="entitiesChart" width="400" height="200"></canvas>
+                                  
+    <hr>
 
     <h2>{{ results.top_n }} Most Pronouns (Chart)</h2>
     <canvas id="pronounsChart" width="400" height="200"></canvas>
+                                  
+    <hr>
 
     <h2>{{ results.top_n }} Common Phrases (Chart)</h2>
     <canvas id="bigramsChart" width="400" height="200"></canvas>
-
-    <h2>{{ results.top_n }} Top Entities (Chart)</h2>
-    <canvas id="entitiesChart" width="400" height="200"></canvas>
-
 </div>
 
 <script>
