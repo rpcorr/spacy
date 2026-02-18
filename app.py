@@ -128,6 +128,18 @@ h1 {
 .grid-2 {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
+                                  
+.list-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.list-card {
+    flex: 1 1 48%;
+    min-width: 280px;
+}
+
 .stats p { margin: 6px 0; font-weight: 500; }
 form { margin-bottom: 10px; }
 input, button {
@@ -202,18 +214,47 @@ canvas {
 <label><input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View</label>
 </div>
 
-<div id="listView" class="card">
-<h2>Top {{ results.top_n }} Common Words</h2>
-<ul>{% for word, count in results.common_words %}<li>{{ word }} — {{ count }}</li>{% endfor %}</ul>
+<div id="listView">
 
-<h2>Top {{ results.top_n }} Entities</h2>
-<ul>{% for ent, count in results.entities %}<li>{{ ent }} — {{ count }}</li>{% endfor %}</ul>
+<div class="list-grid">
 
-<h2>Top {{ results.top_n }} Pronouns</h2>
-<ul>{% for p, c in results.pronouns %}<li>{{ p }} — {{ c }}</li>{% endfor %}</ul>
+    <div class="card list-card">
+        <h2>Top {{ results.top_n }} Common Words</h2>
+        <ul>
+        {% for word, count in results.common_words %}
+            <li>{{ word }} — {{ count }}</li>
+        {% endfor %}
+        </ul>
+    </div>
 
-<h2>Top {{ results.top_n }} Common Phrases</h2>
-<ul>{% for phrase, c in results.bigrams %}<li>{{ phrase[0] }} {{ phrase[1] }} — {{ c }}</li>{% endfor %}</ul>
+    <div class="card list-card">
+        <h2>Top {{ results.top_n }} Entities</h2>
+        <ul>
+        {% for ent, count in results.entities %}
+            <li>{{ ent }} — {{ count }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card list-card">
+        <h2>Top {{ results.top_n }} Pronouns</h2>
+        <ul>
+        {% for p, c in results.pronouns %}
+            <li>{{ p }} — {{ c }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card list-card">
+        <h2>Top {{ results.top_n }} Common Phrases</h2>
+        <ul>
+        {% for phrase, c in results.bigrams %}
+            <li>{{ phrase[0] }} {{ phrase[1] }} — {{ c }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+</div>
 </div>
 
 <div id="chartView" style="display:none;">
