@@ -283,6 +283,16 @@ canvas {
 
 <h1>Speech Comparison Dashboard</h1>
 
+<div class="view-mode-toggle">
+  <button onclick="showSingle()">Single Speech</button>
+  <button onclick="showCompare()">Compare Speeches</button>
+</div>
+
+<div id="singleSpeechSection">
+    <p>Single speech analysis coming soon! For now, please upload two speeches to compare.</p>
+</div>
+
+<div id="compareSpeechSection" style="display:none;">
 <div class="card upload-card">
 
 <form method="post" enctype="multipart/form-data" class="upload-form">
@@ -507,6 +517,7 @@ canvas {
 </div>
 
 </div>
+</div>
 
 <script>
 Chart.register(ChartDataLabels);
@@ -575,6 +586,15 @@ function toggleView(){
 const selected=document.querySelector('input[name="viewMode"]:checked').value;
 document.getElementById("listView").style.display=selected==="list"?"block":"none";
 document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
+}
+
+function showSingle(){
+  document.getElementById('singleSpeechSection').style.display='block';
+  document.getElementById('compareSpeechSection').style.display='none';
+}
+function showCompare(){
+  document.getElementById('singleSpeechSection').style.display='none';
+  document.getElementById('compareSpeechSection').style.display='block';
 }
 </script>
 
