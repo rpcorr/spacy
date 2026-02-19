@@ -111,16 +111,50 @@ TEMPLATE = """
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
-body { font-family: Arial; background:#f4f6f9; margin:0; padding:20px; }
-.card { background:white; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,.08); }
-.upload-card{
+
+/* ==========================
+   Base Styles
+   ========================== */
+body {
+    font-family: Arial;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.upload-card {
     max-width: 900px;
     margin: 0 auto 20px auto;
 }
-.grid { display:grid; gap:20px; }
-.grid-2 { grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); }
-canvas { width:100% !important; height:350px !important; }
 
+canvas {
+    width: 100% !important;
+    height: 350px !important;
+}
+
+/* ==========================
+   Grid Layouts
+   ========================== */
+.grid {
+    display: grid;
+    gap: 20px;
+}
+
+.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* ==========================
+   View Toggle (List / Chart)
+   ========================== */
 .view-toggle {
     display: flex;
     justify-content: center;
@@ -155,6 +189,10 @@ canvas { width:100% !important; height:350px !important; }
     transform: scale(1.05);
 }
 
+/* ==========================
+   Forms
+   ========================== */
+
 /* Shared form layout */
 .upload-form,
 .topn-form {
@@ -164,27 +202,28 @@ canvas { width:100% !important; height:350px !important; }
     align-items: flex-end;
 }
 
-/* Space between the two forms */
+/* Top N form spacing */
 .topn-form {
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e0e0e0;
 }
 
-/* Each input block */
+/* Form row (label + input) */
 .form-row {
     display: flex;
     flex-direction: column;
     flex: 1 1 250px;
 }
 
-/* Labels */
 .form-row label {
     font-weight: bold;
     margin-bottom: 6px;
 }
 
-/* Buttons */
+/* ==========================
+   Buttons
+   ========================== */
 .primary-btn,
 .secondary-btn {
     padding: 10px 20px;
@@ -195,7 +234,6 @@ canvas { width:100% !important; height:350px !important; }
     transition: 0.2s ease;
 }
 
-/* Main compare button */
 .primary-btn {
     background: #4e73df;
     color: white;
@@ -205,7 +243,6 @@ canvas { width:100% !important; height:350px !important; }
     background: #2e59d9;
 }
 
-/* Update button */
 .secondary-btn {
     background: #6f42c1;
     color: white;
@@ -215,33 +252,30 @@ canvas { width:100% !important; height:350px !important; }
     background: #5936a2;
 }
 
+/* ==========================
+   Inputs
+   ========================== */
 .topn-input {
     width: 100px;
     max-width: 120px;
     padding: 6px 10px;
 }
 
-
-/* Make Top N form compact */
+/* ==========================
+   Compact Top N Form
+   ========================== */
 .compact-form {
     justify-content: flex-start;
     align-items: center;
     gap: 12px;
 }
 
-/* Prevent the input container from expanding */
 .compact-form .form-row {
     flex: 0 0 auto;
-}
-
-/* Keep label + input inline */
-.compact-form .form-row {
     flex-direction: row;
     align-items: center;
     gap: 8px;
 }
-
-
 
 </style>
 </head>
