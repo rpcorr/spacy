@@ -113,31 +113,177 @@ TEMPLATE = """
 <style>
 body { font-family: Arial; background:#f4f6f9; margin:0; padding:20px; }
 .card { background:white; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 4px 10px rgba(0,0,0,.08); }
+.upload-card{
+    max-width: 900px;
+    margin: 0 auto 20px auto;
+}
 .grid { display:grid; gap:20px; }
 .grid-2 { grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); }
 canvas { width:100% !important; height:350px !important; }
+
+.view-toggle {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+    gap: 10px;
+}
+
+.view-toggle input[type="radio"] {
+    display: none;
+}
+
+.view-toggle label {
+    padding: 12px 28px;
+    border-radius: 30px;
+    background: #e0e5ec;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 4px 4px 8px rgba(0,0,0,0.1),
+                -4px -4px 8px rgba(255,255,255,0.7);
+}
+
+.view-toggle input[type="radio"]:checked + label {
+    background: linear-gradient(135deg, #4e73df, #1cc88a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    transform: scale(1.05);
+}
+
+.view-toggle label:hover {
+    transform: scale(1.05);
+}
+
+/* Shared form layout */
+.upload-form,
+.topn-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+/* Space between the two forms */
+.topn-form {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Each input block */
+.form-row {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 250px;
+}
+
+/* Labels */
+.form-row label {
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+/* Buttons */
+.primary-btn,
+.secondary-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+/* Main compare button */
+.primary-btn {
+    background: #4e73df;
+    color: white;
+}
+
+.primary-btn:hover {
+    background: #2e59d9;
+}
+
+/* Update button */
+.secondary-btn {
+    background: #6f42c1;
+    color: white;
+}
+
+.secondary-btn:hover {
+    background: #5936a2;
+}
+
+.topn-input {
+    width: 100px;
+    max-width: 120px;
+    padding: 6px 10px;
+}
+
+
+/* Make Top N form compact */
+.compact-form {
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Prevent the input container from expanding */
+.compact-form .form-row {
+    flex: 0 0 auto;
+}
+
+/* Keep label + input inline */
+.compact-form .form-row {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+
+
 </style>
 </head>
 <body>
 
 <h1>Speech Comparison Dashboard</h1>
 
-<div class="card">
-<form method="post" enctype="multipart/form-data">
-Upload Speech A: <input type="file" name="file1" accept=".txt">
-Upload Speech B: <input type="file" name="file2" accept=".txt">
-<button type="submit">Compare</button>
-</form>
+<div class="card upload-card">
 
-<form method="get">
-Top N: <input type="number" name="top_n" value="{{ top_n }}" min="1">
-<button type="submit">Update</button>
-</form>
+<form method="post" enctype="multipart/form-data" class="upload-form">
+
+<div class="form-row">
+<label>Upload Speech A</label>
+<input type="file" name="file1" accept=".txt">
 </div>
 
-<div style="margin:20px 0;">
-<label><input type="radio" name="viewMode" value="list" checked onclick="toggleView()"> List View</label>
-<label><input type="radio" name="viewMode" value="chart" onclick="toggleView()"> Chart View</label>
+<div class="form-row">
+<label>Upload Speech B</label>
+<input type="file" name="file2" accept=".txt">
+</div>
+
+<button type="submit" class="primary-btn">Compare</button>
+
+</form>
+
+
+<form method="get" class="topn-form compact-form">
+<div class="form-row">
+<label>Top N</label>
+<input type="number" name="top_n" value="{{ top_n }}" min="1" class="topn-input">
+</div>
+<button type="submit" class="secondary-btn">Update</button>
+</form>
+
+</div>
+
+<div class="view-toggle">
+    <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
+    <label for="listMode">📄 List View</label>
+
+    <input type="radio" id="chartMode" name="viewMode" value="chart" onclick="toggleView()">
+    <label for="chartMode">📊 Chart View</label>
 </div>
 
 <div id="listView">
