@@ -78,6 +78,13 @@ def home():
             text1 = f.read()
         file1_name = default_file
 
+    analysis_mode = request.form.get("analysis_mode", "single")
+
+    single_mode = True
+    if analysis_mode == "compare":
+        single_mode = False
+
+
     if not text2:
         text2 = text1
         file2_name = file1_name
@@ -99,7 +106,9 @@ def home():
                                   results1=results1,
                                   results2=results2,
                                   comparison=comparison,
-                                  top_n=top_n)
+                                  top_n=top_n,
+                                  single_mode=single_mode,
+                                  analyzed=(request.method == "POST"))
 
 
 TEMPLATE = """
@@ -281,33 +290,36 @@ canvas {
 </head>
 <body>
 
-<h1>Speech Comparison Dashboard</h1>
+<h1>Speech Analyze Dashboard</h1>
 
-<div class="view-mode-toggle">
-  <button onclick="showSingle()">Single Speech</button>
-  <button onclick="showCompare()">Compare Speeches</button>
-</div>
-
-<div id="singleSpeechSection">
-    <p>Single speech analysis coming soon! For now, please upload two speeches to compare.</p>
-</div>
-
-<div id="compareSpeechSection" style="display:none;">
+<div id="compareSpeechSection">
 <div class="card upload-card">
 
 <form method="post" enctype="multipart/form-data" class="upload-form">
 
 <div class="form-row">
-<label>Upload Speech A</label>
-<input type="file" name="file1" accept=".txt">
+<label>
+<input type="radio" name="analysis_mode" value="single" checked onchange="toggleUploadMode()">
+ Analyze One Speech
+</label>
+
+<label>
+<input type="radio" name="analysis_mode" value="compare" onchange="toggleUploadMode()">
+ Compare Two Speeches
+</label>
 </div>
 
 <div class="form-row">
+<label>Upload Speech A</label>
+<input type="file" name="file1" accept=".txt" required>
+</div>
+
+<div class="form-row" id="file2Row" style="display:none;">
 <label>Upload Speech B</label>
 <input type="file" name="file2" accept=".txt">
 </div>
 
-<button type="submit" class="primary-btn">Compare</button>
+<button type="submit" class="primary-btn">Analyze</button>
 
 </form>
 
@@ -332,7 +344,7 @@ canvas {
 
 <div id="listView">
 
-<div class="grid grid-2">
+<div class="grid {% if not single_mode %}grid-2{% endif %}">
 
 <div class="card">
 <h2>{{ results1.file_name }}</h2>
@@ -342,26 +354,31 @@ canvas {
 <p>Avg MDD: {{ results1.average_mdd }}</p>
 </div>
 
-<div class="card">
-<h2>{{ results2.file_name }}</h2>
-<p>Sentences: {{ results2.sentences }}</p>
-<p>Words: {{ results2.words }}</p>
-<p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-<p>Avg MDD: {{ results2.average_mdd }}</p>
-</div>
+{% if not single_mode %}
+    <div class="card">
+        <h2>{{ results2.file_name }}</h2>
+        <p>Sentences: {{ results2.sentences }}</p>
+        <p>Words: {{ results2.words }}</p>
+        <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
+        <p>Avg MDD: {{ results2.average_mdd }}</p>
+    </div>
+{% endif %}
 
 </div>
 
-<div class="card">
-<h2>Vocabulary Comparison</h2>
-<p>Shared Vocabulary: {{ comparison.shared }}</p>
-<p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
-<p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
-</div>
+{% if not single_mode %}
+    <div class="card">
+        <h2>Vocabulary Comparison</h2>
+        <p>Shared Vocabulary: {{ comparison.shared }}</p>
+        <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
+        <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
+    </div>
+{% endif %}
+
 
 
 <!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
-<div class="grid grid-2">
+<div class="grid {% if not single_mode %}grid-2{% endif %}">
 
 <!-- COMMON WORDS CARD -->
 <div class="card">
@@ -376,14 +393,16 @@ canvas {
 </ul>
 </div>
 
-<div>
-<strong>{{ results2.file_name }}</strong>
-<ul>
-{% for word, count in results2.common_words %}
-<li>{{ word }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
+{% if not single_mode %}
+    <div>
+    <strong>{{ results2.file_name }}</strong>
+    <ul>
+    {% for word, count in results2.common_words %}
+    <li>{{ word }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endif %}
 </div>
 </div>
 
@@ -401,6 +420,7 @@ canvas {
 </ul>
 </div>
 
+{% if not single_mode %}
 <div>
 <strong>{{ results2.file_name }}</strong>
 <ul>
@@ -409,6 +429,7 @@ canvas {
 {% endfor %}
 </ul>
 </div>
+{% endif %}
 </div>
 </div>
 
@@ -426,6 +447,7 @@ canvas {
 </ul>
 </div>
 
+{% if not single_mode %}
 <div>
 <strong>{{ results2.file_name }}</strong>
 <ul>
@@ -434,6 +456,8 @@ canvas {
 {% endfor %}
 </ul>
 </div>
+{% endif %}
+
 </div>
 </div>
 
@@ -451,6 +475,7 @@ canvas {
 </ul>
 </div>
 
+{% if not single_mode %}
 <div>
 <strong>{{ results2.file_name }}</strong>
 <ul>
@@ -459,6 +484,7 @@ canvas {
 {% endfor %}
 </ul>
 </div>
+{% endif %}
 </div>
 </div>
 
@@ -471,7 +497,7 @@ canvas {
 
 <div id="chartView" style="display:none;">
 
-<div class="grid grid-2">
+<div class="grid {% if not single_mode %}grid-2{% endif %}">
 
 <div class="card">
 <h2>{{ results1.file_name }}</h2>
@@ -481,6 +507,7 @@ canvas {
 <p>Avg MDD: {{ results1.average_mdd }}</p>
 </div>
 
+{% if not single_mode %}
 <div class="card">
 <h2>{{ results2.file_name }}</h2>
 <p>Sentences: {{ results2.sentences }}</p>
@@ -488,6 +515,7 @@ canvas {
 <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
 <p>Avg MDD: {{ results2.average_mdd }}</p>
 </div>
+{% endif %}
 
 </div>
 
@@ -535,9 +563,13 @@ type:'bar',
 data:{
 labels:labels,
 datasets:[
-{label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"},
+{label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
+{% if not single_mode %}
+,
 {label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
-]},
+{% endif %}
+]
+},
 options:chartOptions
 });
 }
@@ -575,9 +607,13 @@ new Chart(document.getElementById("bigramsChart"),{
 type:'bar',
 data:{labels:bigramLabels,
 datasets:[
-{label:"{{ results1.file_name }}",data:data1,backgroundColor:"rgba(54,162,235,0.6)"},
-{label:"{{ results2.file_name }}",data:data2,backgroundColor:"rgba(255,99,132,0.6)"}
-]},
+{label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
+{% if not single_mode %}
+,
+{label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
+{% endif %}
+]
+},
 options:{...chartOptions,
 scales:{y:{beginAtZero:true,suggestedMax:maxVal+0.5}}}
 });
@@ -588,14 +624,17 @@ document.getElementById("listView").style.display=selected==="list"?"block":"non
 document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
 }
 
-function showSingle(){
-  document.getElementById('singleSpeechSection').style.display='block';
-  document.getElementById('compareSpeechSection').style.display='none';
+function toggleUploadMode(){
+    const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
+    const file2Row = document.getElementById("file2Row");
+
+    if(mode === "compare"){
+        file2Row.style.display = "block";
+    } else {
+        file2Row.style.display = "none";
+    }
 }
-function showCompare(){
-  document.getElementById('singleSpeechSection').style.display='none';
-  document.getElementById('compareSpeechSection').style.display='block';
-}
+
 </script>
 
 </body>
