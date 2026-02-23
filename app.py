@@ -336,34 +336,57 @@ canvas {
 <form method="post" enctype="multipart/form-data" class="upload-form vertical-form">
 
   <!-- ROW 1: Mode Selection -->
-  <div class="form-row radio-row">
-      <label>
-          <input type="radio" name="analysis_mode" value="single"
-{% if single_mode %}checked{% endif %}
-onchange="toggleUploadMode()">
-          Analyze One Speech
-      </label>
+    <div class="form-row radio-row">
+        <label>
+            <input type="radio" name="analysis_mode" value="single" {% if single_mode %}checked{% endif %}>
+            Analyze One Speech
+        </label>
 
-      <label>
-          <input type="radio" name="analysis_mode" value="compare"
-{% if not single_mode %}checked{% endif %}
-onchange="toggleUploadMode()">
-          Compare Two Speeches
-      </label>
-  </div>
+        <label>
+            <input type="radio" name="analysis_mode" value="compare" {% if not single_mode %}checked{% endif %}>
+            Compare Two Speeches
+        </label>
+    </div>
 
-  <!-- ROW 2: File Uploads -->
-  <div class="form-row upload-row">
-      <div>
-          <label>Upload Speech A</label>
-          <input type="file" name="file1" accept=".txt" required>
-      </div>
+    <!-- ROW 2: File Uploads -->
+<div class="form-row upload-row">
+    <div>
+        <label>Upload Speech A</label>
+        <input type="file" name="file1" accept=".txt" required>
+    </div>
 
-      <div id="file2Row" style="display:none;">
-          <label>Upload Speech B</label>
-          <input type="file" name="file2" accept=".txt">
-      </div>
-  </div>
+    <div id="file2Row" style="display: {% if single_mode %}none{% else %}block{% endif %};">
+        <label>Upload Speech B</label>
+        <input type="file" name="file2" accept=".txt" {% if not single_mode %}required{% endif %}>
+    </div>
+
+</div>
+
+<script>
+// Toggle the second upload field based on selected mode
+function toggleUploadMode() {
+    const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
+    const file2Row = document.getElementById("file2Row");
+    const file2Input = file2Row.querySelector('input[name="file2"]');
+
+    if (mode === "compare") {
+        file2Row.style.display = "block";   // show second upload
+        file2Input.required = true;         // make it required
+    } else {
+        file2Row.style.display = "none";    // hide second upload
+        file2Input.required = false;        // not required
+        file2Input.value = "";              // clear any selected file
+    }
+}
+
+// Attach toggle to radio buttons
+document.querySelectorAll('input[name="analysis_mode"]').forEach(radio => {
+    radio.addEventListener('change', toggleUploadMode);
+});
+
+// Run on page load
+window.addEventListener("load", toggleUploadMode);
+</script>
 
   <!-- ROW 3: Top N -->
     <div class="form-row">
@@ -704,22 +727,6 @@ onchange="toggleUploadMode()">
     document.getElementById("listView").style.display=selected==="list"?"block":"none";
     document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
     }
-
-    function toggleUploadMode(){
-        const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
-        const file2Row = document.getElementById("file2Row");
-
-        if(mode === "compare"){
-            file2Row.style.display = "block";
-        } else {
-            file2Row.style.display = "none";
-        }
-    }
-
-    window.onload = function() {
-        toggleUploadMode();
-    };
-
     </script>
 
 {% endif %}
