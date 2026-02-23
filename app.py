@@ -55,7 +55,7 @@ def home():
     text2 = None
     file1_name = "Speech A"
     file2_name = "Speech B"
-    analysis_mode = "single"
+    analysis_mode = request.args.get("analysis_mode", "single")
 
     if request.method == "POST":
         analysis_mode = request.form.get("analysis_mode", "single")
@@ -376,7 +376,10 @@ onchange="toggleUploadMode()">
         <button type="submit" class="primary-btn">Analyze</button>
 
         {% if analyzed %}
-            <a href="/" class="secondary-btn">Clear</a>
+            <form method="get" style="display:inline;">
+                <input type="hidden" name="analysis_mode" value="{{ 'compare' if not single_mode else 'single' }}">
+                <button type="submit" class="secondary-btn">Clear</button>
+            </form>
         {% endif %}
     </div>
 
@@ -714,6 +717,10 @@ onchange="toggleUploadMode()">
             file2Row.style.display = "none";
         }
     }
+
+    window.onload = function() {
+        toggleUploadMode();
+    };
 
     </script>
 
