@@ -1,10 +1,10 @@
 from flask import Flask, render_template_string, request
+
 import spacy
 from collections import Counter
 
 app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
-
 
 def analyze_text(text, file_name, top_n=10):
     doc = nlp(text)
@@ -50,18 +50,20 @@ def analyze_text(text, file_name, top_n=10):
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    top_n = request.args.get("top_n", default=10, type=int)
-    if top_n <= 0:
-        top_n = 10
-
-    default_file = "Extract1_2016.txt"
-
+    top_n = 10
     text1 = None
     text2 = None
     file1_name = "Speech A"
     file2_name = "Speech B"
+    analysis_mode = "single"
 
     if request.method == "POST":
+        analysis_mode = request.form.get("analysis_mode", "single")
+
+        top_n = request.form.get("top_n", 10, type=int)
+        if not top_n or top_n <= 0:
+            top_n = 10
+
         file1 = request.files.get("file1")
         file2 = request.files.get("file2")
 
@@ -73,43 +75,37 @@ def home():
             text2 = file2.read().decode("utf-8")
             file2_name = file2.filename
 
-    if not text1:
-        with open(default_file, "r", encoding="utf-8") as f:
-            text1 = f.read()
-        file1_name = default_file
+    single_mode = analysis_mode != "compare"
 
-    analysis_mode = request.form.get("analysis_mode", "single")
+    results1 = None
+    results2 = None
+    comparison = None
 
-    single_mode = True
-    if analysis_mode == "compare":
-        single_mode = False
+    if text1:
+        results1 = analyze_text(text1, file1_name, top_n)
 
+        if not single_mode and text2:
+            results2 = analyze_text(text2, file2_name, top_n)
 
-    if not text2:
-        text2 = text1
-        file2_name = file1_name
+            shared_vocab = results1["lemmas_set"] & results2["lemmas_set"]
+            unique_1 = results1["lemmas_set"] - results2["lemmas_set"]
+            unique_2 = results2["lemmas_set"] - results1["lemmas_set"]
 
-    results1 = analyze_text(text1, file1_name, top_n)
-    results2 = analyze_text(text2, file2_name, top_n)
+            comparison = {
+                "shared": len(shared_vocab),
+                "unique_1": len(unique_1),
+                "unique_2": len(unique_2)
+            }
 
-    shared_vocab = results1["lemmas_set"] & results2["lemmas_set"]
-    unique_1 = results1["lemmas_set"] - results2["lemmas_set"]
-    unique_2 = results2["lemmas_set"] - results1["lemmas_set"]
-
-    comparison = {
-        "shared": len(shared_vocab),
-        "unique_1": len(unique_1),
-        "unique_2": len(unique_2)
-    }
-
-    return render_template_string(TEMPLATE,
-                                  results1=results1,
-                                  results2=results2,
-                                  comparison=comparison,
-                                  top_n=top_n,
-                                  single_mode=single_mode,
-                                  analyzed=(request.method == "POST"))
-
+    return render_template_string(
+        TEMPLATE,
+        results1=results1,
+        results2=results2,
+        comparison=comparison,
+        top_n=top_n,
+        single_mode=single_mode,
+        analyzed=bool(text1)
+    )
 
 TEMPLATE = """
 <!DOCTYPE html>
@@ -340,12 +336,16 @@ canvas {
   <!-- ROW 1: Mode Selection -->
   <div class="form-row radio-row">
       <label>
-          <input type="radio" name="analysis_mode" value="single" checked onchange="toggleUploadMode()">
+          <input type="radio" name="analysis_mode" value="single"
+{% if single_mode %}checked{% endif %}
+onchange="toggleUploadMode()">
           Analyze One Speech
       </label>
 
       <label>
-          <input type="radio" name="analysis_mode" value="compare" onchange="toggleUploadMode()">
+          <input type="radio" name="analysis_mode" value="compare"
+{% if not single_mode %}checked{% endif %}
+onchange="toggleUploadMode()">
           Compare Two Speeches
       </label>
   </div>
@@ -363,322 +363,355 @@ canvas {
       </div>
   </div>
 
-  <!-- ROW 3: Submit Button -->
-  <div class="form-row submit-row">
-      <button type="submit" class="primary-btn">Analyze</button>
-  </div>
+  <!-- ROW 3: Top N -->
+    <div class="form-row">
+        <label>Top N</label>
+        <input type="number" name="top_n" value="{{ top_n }}" min="1" class="topn-input">
+    </div>
+
+    <!-- ROW 4: Submit Button -->
+    <div class="form-row submit-row">
+        <button type="submit" class="primary-btn">Analyze</button>
+    </div>
 
 </form>
 
-<form method="get" class="topn-form compact-form">
-<div class="form-row">
-<label>Top N</label>
-<input type="number" name="top_n" value="{{ top_n }}" min="1" class="topn-input">
-</div>
-<button type="submit" class="secondary-btn">Update</button>
-</form>
-
 </div>
 
-<div class="view-toggle">
-    <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
-    <label for="listMode">📄 List View</label>
+{% if analyzed %}
 
-    <input type="radio" id="chartMode" name="viewMode" value="chart" onclick="toggleView()">
-    <label for="chartMode">📊 Chart View</label>
-</div>
+    <div class="view-toggle">
+        <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
+        <label for="listMode">📄 List View</label>
 
-<div id="listView">
-
-<div class="grid {% if not single_mode %}grid-2{% endif %}">
-
-<div class="card">
-<h2>{{ results1.file_name }}</h2>
-<p>Sentences: {{ results1.sentences }}</p>
-<p>Words: {{ results1.words }}</p>
-<p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-<p>Avg MDD: {{ results1.average_mdd }}</p>
-</div>
-
-{% if not single_mode %}
-    <div class="card">
-        <h2>{{ results2.file_name }}</h2>
-        <p>Sentences: {{ results2.sentences }}</p>
-        <p>Words: {{ results2.words }}</p>
-        <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-        <p>Avg MDD: {{ results2.average_mdd }}</p>
+        <input type="radio" id="chartMode" name="viewMode" value="chart" onclick="toggleView()">
+        <label for="chartMode">📊 Chart View</label>
     </div>
-{% endif %}
 
-</div>
+    <div id="listView">
 
-{% if not single_mode %}
+    <div class="grid {% if not single_mode %}grid-2{% endif %}">
+
     <div class="card">
-        <h2>Vocabulary Comparison</h2>
-        <p>Shared Vocabulary: {{ comparison.shared }}</p>
-        <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
-        <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
+    <h2>{{ results1.file_name }}</h2>
+    <p>Sentences: {{ results1.sentences }}</p>
+    <p>Words: {{ results1.words }}</p>
+    <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
+    <p>Avg MDD: {{ results1.average_mdd }}</p>
     </div>
-{% endif %}
+
+    {% if not single_mode %}
+        <div class="card">
+            <h2>{{ results2.file_name }}</h2>
+            <p>Sentences: {{ results2.sentences }}</p>
+            <p>Words: {{ results2.words }}</p>
+            <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
+            <p>Avg MDD: {{ results2.average_mdd }}</p>
+        </div>
+    {% endif %}
+
+    </div>
+
+    {% if not single_mode %}
+        <div class="card">
+            <h2>Vocabulary Comparison</h2>
+            <p>Shared Vocabulary: {{ comparison.shared }}</p>
+            <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
+            <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
+        </div>
+    {% endif %}
 
 
 
-<!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
-<div class="grid {% if not single_mode %}grid-2{% endif %}">
+    <!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
+    <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-<!-- COMMON WORDS CARD -->
-<div class="card">
-<h3>Top {{ top_n }} Common Words</h3>
-<div style="display:flex; gap:40px;">
-<div>
-<strong>{{ results1.file_name }}</strong>
-<ul>
-{% for word, count in results1.common_words %}
-<li>{{ word }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
-
-{% if not single_mode %}
+    <!-- COMMON WORDS CARD -->
+    <div class="card">
+    <h3>Top {{ top_n }} Common Words</h3>
+    <div style="display:flex; gap:40px;">
     <div>
-    <strong>{{ results2.file_name }}</strong>
+    <strong>{{ results1.file_name }}</strong>
     <ul>
-    {% for word, count in results2.common_words %}
+    {% for word, count in results1.common_words %}
     <li>{{ word }} — {{ count }}</li>
     {% endfor %}
     </ul>
     </div>
-{% endif %}
-</div>
-</div>
+
+    {% if not single_mode %}
+        <div>
+        <strong>{{ results2.file_name }}</strong>
+        <ul>
+        {% for word, count in results2.common_words %}
+        <li>{{ word }} — {{ count }}</li>
+        {% endfor %}
+        </ul>
+        </div>
+    {% endif %}
+    </div>
+    </div>
 
 
-<!-- ENTITIES CARD -->
-<div class="card">
-<h3>Top {{ top_n }} Entities</h3>
-<div style="display:flex; gap:40px;">
-<div>
-<strong>{{ results1.file_name }}</strong>
-<ul>
-{% for ent, count in results1.entities %}
-<li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
+    <!-- ENTITIES CARD -->
+    <div class="card">
+    <h3>Top {{ top_n }} Entities</h3>
+    <div style="display:flex; gap:40px;">
+    <div>
+    <strong>{{ results1.file_name }}</strong>
+    <ul>
+    {% for ent, count in results1.entities %}
+    <li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
 
-{% if not single_mode %}
-<div>
-<strong>{{ results2.file_name }}</strong>
-<ul>
-{% for ent, count in results2.entities %}
-<li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
-{% endif %}
-</div>
-</div>
-
-
-<!-- PRONOUNS CARD -->
-<div class="card">
-<h3>Top {{ top_n }} Pronouns</h3>
-<div style="display:flex; gap:40px;">
-<div>
-<strong>{{ results1.file_name }}</strong>
-<ul>
-{% for word, count in results1.pronouns %}
-<li>{{ word }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
-
-{% if not single_mode %}
-<div>
-<strong>{{ results2.file_name }}</strong>
-<ul>
-{% for word, count in results2.pronouns %}
-<li>{{ word }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
-{% endif %}
-
-</div>
-</div>
+    {% if not single_mode %}
+    <div>
+    <strong>{{ results2.file_name }}</strong>
+    <ul>
+    {% for ent, count in results2.entities %}
+    <li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+    {% endif %}
+    </div>
+    </div>
 
 
-<!-- COMMON PHRASES CARD -->
-<div class="card">
-<h3>Top {{ top_n }} Common Phrases (Bigrams)</h3>
-<div style="display:flex; gap:40px;">
-<div>
-<strong>{{ results1.file_name }}</strong>
-<ul>
-{% for phrase, count in results1.bigrams %}
-<li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
+    <!-- PRONOUNS CARD -->
+    <div class="card">
+    <h3>Top {{ top_n }} Pronouns</h3>
+    <div style="display:flex; gap:40px;">
+    <div>
+    <strong>{{ results1.file_name }}</strong>
+    <ul>
+    {% for word, count in results1.pronouns %}
+    <li>{{ word }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
 
-{% if not single_mode %}
-<div>
-<strong>{{ results2.file_name }}</strong>
-<ul>
-{% for phrase, count in results2.bigrams %}
-<li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
-{% endfor %}
-</ul>
-</div>
-{% endif %}
-</div>
-</div>
+    {% if not single_mode %}
+    <div>
+    <strong>{{ results2.file_name }}</strong>
+    <ul>
+    {% for word, count in results2.pronouns %}
+    <li>{{ word }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+    {% endif %}
 
-</div>
-
-</div>
+    </div>
+    </div>
 
 
-<div id="chartView" style="display:none;">
+    <!-- COMMON PHRASES CARD -->
+    <div class="card">
+    <h3>Top {{ top_n }} Common Phrases (Bigrams)</h3>
+    <div style="display:flex; gap:40px;">
+    <div>
+    <strong>{{ results1.file_name }}</strong>
+    <ul>
+    {% for phrase, count in results1.bigrams %}
+    <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
 
-<div class="grid {% if not single_mode %}grid-2{% endif %}">
+    {% if not single_mode %}
+    <div>
+    <strong>{{ results2.file_name }}</strong>
+    <ul>
+    {% for phrase, count in results2.bigrams %}
+    <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+    {% endif %}
+    </div>
+    </div>
 
-<div class="card">
-<h2>{{ results1.file_name }}</h2>
-<p>Sentences: {{ results1.sentences }}</p>
-<p>Words: {{ results1.words }}</p>
-<p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-<p>Avg MDD: {{ results1.average_mdd }}</p>
-</div>
+    </div>
 
-{% if not single_mode %}
-<div class="card">
-<h2>{{ results2.file_name }}</h2>
-<p>Sentences: {{ results2.sentences }}</p>
-<p>Words: {{ results2.words }}</p>
-<p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-<p>Avg MDD: {{ results2.average_mdd }}</p>
-</div>
-{% endif %}
+    </div>
 
-</div>
 
-<div class="card">
-<h2>Sentence & Word Comparison</h2>
-<canvas id="statsChart"></canvas>
-</div>
+    <div id="chartView" style="display:none;">
 
-<div class="card">
-<h2>Common Words</h2>
-<canvas id="wordsChart"></canvas>
-</div>
+    <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-<div class="card">
-<h2>Entities</h2>
-<canvas id="entitiesChart"></canvas>
-</div>
+    <div class="card">
+    <h2>{{ results1.file_name }}</h2>
+    <p>Sentences: {{ results1.sentences }}</p>
+    <p>Words: {{ results1.words }}</p>
+    <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
+    <p>Avg MDD: {{ results1.average_mdd }}</p>
+    </div>
 
-<div class="card">
-<h2>Pronouns</h2>
-<canvas id="pronounsChart"></canvas>
-</div>
+    {% if not single_mode %}
+    <div class="card">
+    <h2>{{ results2.file_name }}</h2>
+    <p>Sentences: {{ results2.sentences }}</p>
+    <p>Words: {{ results2.words }}</p>
+    <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
+    <p>Avg MDD: {{ results2.average_mdd }}</p>
+    </div>
+    {% endif %}
 
-<div class="card">
-<h2>Common Phrases (Bigrams)</h2>
-<canvas id="bigramsChart"></canvas>
-</div>
+    </div>
 
-</div>
+    <div class="card">
+    <h2>Sentence & Word Comparison</h2>
+    <canvas id="statsChart"></canvas>
+    </div>
 
-<script>
-Chart.register(ChartDataLabels);
+    <div class="card">
+    <h2>Common Words</h2>
+    <canvas id="wordsChart"></canvas>
+    </div>
 
-const chartOptions = {
-responsive:true,
-maintainAspectRatio:false,
-plugins:{ datalabels:{ anchor:'end', align:'end', font:{weight:'bold'} } },
-scales:{ y:{ beginAtZero:true } }
-};
+    <div class="card">
+    <h2>Entities</h2>
+    <canvas id="entitiesChart"></canvas>
+    </div>
 
-function createGroupedChart(id, labels, data1, data2){
-new Chart(document.getElementById(id),{
-type:'bar',
-data:{
-labels:labels,
-datasets:[
-{label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
-{% if not single_mode %}
-,
-{label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
-{% endif %}
-]
-},
-options:chartOptions
-});
-}
+    <div class="card">
+    <h2>Pronouns</h2>
+    <canvas id="pronounsChart"></canvas>
+    </div>
 
-createGroupedChart("statsChart",
-["Sentences","Words"],
-[{{ results1.sentences }},{{ results1.words }}],
-[{{ results2.sentences }},{{ results2.words }}]
-);
+    <div class="card">
+    <h2>Common Phrases (Bigrams)</h2>
+    <canvas id="bigramsChart"></canvas>
+    </div>
 
-createGroupedChart("wordsChart",
-{{ results1.common_words | map(attribute=0) | list | safe }},
-{{ results1.common_words | map(attribute=1) | list | safe }},
-{{ results2.common_words | map(attribute=1) | list | safe }}
-);
+    </div>
 
-createGroupedChart("entitiesChart",
-{{ results1.entity_labels | safe }},
-{{ results1.entities | map(attribute=1) | list | safe }},
-{{ results2.entities | map(attribute=1) | list | safe }}
-);
+    <script>
+    Chart.register(ChartDataLabels);
 
-createGroupedChart("pronounsChart",
-{{ results1.pronouns | map(attribute=0) | list | safe }},
-{{ results1.pronouns | map(attribute=1) | list | safe }},
-{{ results2.pronouns | map(attribute=1) | list | safe }}
-);
+    const chartOptions = {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{ datalabels:{ anchor:'end', align:'end', font:{weight:'bold'} } },
+    scales:{ y:{ beginAtZero:true } }
+    };
 
-const bigramLabels={{ results1.bigrams | map(attribute=0) | map('join',' ') | list | safe }};
-const data1={{ results1.bigrams | map(attribute=1) | list | safe }};
-const data2={{ results2.bigrams | map(attribute=1) | list | safe }};
-const maxVal=Math.max(...data1,...data2);
-
-new Chart(document.getElementById("bigramsChart"),{
-type:'bar',
-data:{labels:bigramLabels,
-datasets:[
-{label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
-{% if not single_mode %}
-,
-{label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
-{% endif %}
-]
-},
-options:{...chartOptions,
-scales:{y:{beginAtZero:true,suggestedMax:maxVal+0.5}}}
-});
-
-function toggleView(){
-const selected=document.querySelector('input[name="viewMode"]:checked').value;
-document.getElementById("listView").style.display=selected==="list"?"block":"none";
-document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
-}
-
-function toggleUploadMode(){
-    const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
-    const file2Row = document.getElementById("file2Row");
-
-    if(mode === "compare"){
-        file2Row.style.display = "block";
-    } else {
-        file2Row.style.display = "none";
+    function createGroupedChart(id, labels, data1, data2){
+    new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{
+    labels:labels,
+    datasets:[
+    {label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
+    {% if not single_mode %}
+    ,
+    {label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
+    {% endif %}
+    ]
+    },
+    options:chartOptions
+    });
     }
-}
 
-</script>
+    createGroupedChart("statsChart",
+    ["Sentences","Words"],
+    [{{ results1.sentences }},{{ results1.words }}]
+    {% if not single_mode and results2 %}
+    ,
+    [{{ results2.sentences }},{{ results2.words }}]
+    {% else %}
+    ,
+    []
+    {% endif %}
+    );
+
+    createGroupedChart("wordsChart",
+    {{ results1.common_words | map(attribute=0) | list | safe }},
+    {{ results1.common_words | map(attribute=1) | list | safe }}
+    {% if not single_mode and results2 %}
+    ,
+    {{ results2.common_words | map(attribute=1) | list | safe }}
+    {% else %}
+    ,
+    []
+    {% endif %}
+    );
+
+    createGroupedChart("entitiesChart",
+    {{ results1.entity_labels | safe }},
+    {{ results1.entities | map(attribute=1) | list | safe }}
+    {% if not single_mode and results2 %}
+    ,
+    {{ results2.entities | map(attribute=1) | list | safe }}
+    {% else %}
+    ,
+    []
+    {% endif %}
+    );
+
+    createGroupedChart("pronounsChart",
+    {{ results1.pronouns | map(attribute=0) | list | safe }},
+    {{ results1.pronouns | map(attribute=1) | list | safe }}
+    {% if not single_mode and results2 %}
+    ,
+    {{ results2.pronouns | map(attribute=1) | list | safe }}
+    {% else %}
+    ,
+    []
+    {% endif %}
+    );
+
+
+    const bigramLabels={{ results1.bigrams | map(attribute=0) | map('join',' ') | list | safe }};
+    const data1={{ results1.bigrams | map(attribute=1) | list | safe }};
+    {% if not single_mode and results2 %}
+        const data2={{ results2.bigrams | map(attribute=1) | list | safe }};
+    {% else %}
+        const data2=[];
+    {% endif %}
+
+    const maxVal=Math.max(...data1,...data2);
+
+    new Chart(document.getElementById("bigramsChart"),{
+    type:'bar',
+    data:{labels:bigramLabels,
+    datasets:[
+    {label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
+    {% if not single_mode %}
+    ,
+    {label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
+    {% endif %}
+    ]
+    },
+    options:{...chartOptions,
+    scales:{y:{beginAtZero:true,suggestedMax:maxVal+0.5}}}
+    });
+
+    function toggleView(){
+    const selected=document.querySelector('input[name="viewMode"]:checked').value;
+    document.getElementById("listView").style.display=selected==="list"?"block":"none";
+    document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
+    }
+
+    function toggleUploadMode(){
+        const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
+        const file2Row = document.getElementById("file2Row");
+
+        if(mode === "compare"){
+            file2Row.style.display = "block";
+        } else {
+            file2Row.style.display = "none";
+        }
+    }
+
+    </script>
+
+{% endif %}
+
 
 </body>
 </html>
