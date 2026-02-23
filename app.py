@@ -131,6 +131,8 @@ body {
     padding: 20px;
 }
 
+h1 { text-align: center; }
+
 .card {
     background: white;
     padding: 20px;
@@ -221,8 +223,11 @@ canvas {
 /* Form row (label + input) */
 .form-row {
     display: flex;
-    flex-direction: column;
-    flex: 1 1 250px;
+    flex-direction: row;  /* horizontal layout for children if needed */
+    align-items: center;
+    gap: 10px;            /* space between label/input/radios */
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .form-row label {
@@ -286,43 +291,84 @@ canvas {
     gap: 8px;
 }
 
+.vertical-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.radio-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+
+}
+
+.radio-row label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: normal;   /* prevents bold stacking look */
+    margin: 0;
+}
+
+.upload-row {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center
+}
+
+.submit-row {
+    display: flex;
+    justify-content: flex-start;
+}
 </style>
 </head>
 <body>
 
 <h1>Speech Analyze Dashboard</h1>
 
-<div id="compareSpeechSection">
 <div class="card upload-card">
 
-<form method="post" enctype="multipart/form-data" class="upload-form">
+<form method="post" enctype="multipart/form-data" class="upload-form vertical-form">
 
-<div class="form-row">
-<label>
-<input type="radio" name="analysis_mode" value="single" checked onchange="toggleUploadMode()">
- Analyze One Speech
-</label>
+  <!-- ROW 1: Mode Selection -->
+  <div class="form-row radio-row">
+      <label>
+          <input type="radio" name="analysis_mode" value="single" checked onchange="toggleUploadMode()">
+          Analyze One Speech
+      </label>
 
-<label>
-<input type="radio" name="analysis_mode" value="compare" onchange="toggleUploadMode()">
- Compare Two Speeches
-</label>
-</div>
+      <label>
+          <input type="radio" name="analysis_mode" value="compare" onchange="toggleUploadMode()">
+          Compare Two Speeches
+      </label>
+  </div>
 
-<div class="form-row">
-<label>Upload Speech A</label>
-<input type="file" name="file1" accept=".txt" required>
-</div>
+  <!-- ROW 2: File Uploads -->
+  <div class="form-row upload-row">
+      <div>
+          <label>Upload Speech A</label>
+          <input type="file" name="file1" accept=".txt" required>
+      </div>
 
-<div class="form-row" id="file2Row" style="display:none;">
-<label>Upload Speech B</label>
-<input type="file" name="file2" accept=".txt">
-</div>
+      <div id="file2Row" style="display:none;">
+          <label>Upload Speech B</label>
+          <input type="file" name="file2" accept=".txt">
+      </div>
+  </div>
 
-<button type="submit" class="primary-btn">Analyze</button>
+  <!-- ROW 3: Submit Button -->
+  <div class="form-row submit-row">
+      <button type="submit" class="primary-btn">Analyze</button>
+  </div>
 
 </form>
-
 
 <form method="get" class="topn-form compact-form">
 <div class="form-row">
@@ -490,8 +536,6 @@ canvas {
 
 </div>
 
-
-
 </div>
 
 
@@ -544,7 +588,6 @@ canvas {
 <canvas id="bigramsChart"></canvas>
 </div>
 
-</div>
 </div>
 
 <script>
