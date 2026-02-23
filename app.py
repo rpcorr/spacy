@@ -368,14 +368,32 @@ function toggleUploadMode() {
     const mode = document.querySelector('input[name="analysis_mode"]:checked').value;
     const file2Row = document.getElementById("file2Row");
     const file2Input = file2Row.querySelector('input[name="file2"]');
+    const resultsSection = document.getElementById("resultsSection");
+    const clearButton = document.getElementById("clearButton");
 
     if (mode === "compare") {
-        file2Row.style.display = "block";   // show second upload
-        file2Input.required = true;         // make it required
+        file2Row.style.display = "block";
+        file2Input.required = true;
     } else {
-        file2Row.style.display = "none";    // hide second upload
-        file2Input.required = false;        // not required
-        file2Input.value = "";              // clear any selected file
+        file2Row.style.display = "none";
+        file2Input.required = false;
+        file2Input.value = "";
+    }
+
+    // Hide previous results whenever mode changes
+    if (resultsSection) {
+        resultsSection.style.display = "none";
+        clearButton.style.display = "none";
+    }
+}
+
+// Show results when form is submitted
+function showResultsOnSubmit() {
+    const resultsSection = document.getElementById("resultsSection");
+    const clearButton = document.getElementById("clearButton");
+    if (resultsSection) {
+        resultsSection.style.display = "block";
+        clearButton.style.display = "block";
     }
 }
 
@@ -384,8 +402,23 @@ document.querySelectorAll('input[name="analysis_mode"]').forEach(radio => {
     radio.addEventListener('change', toggleUploadMode);
 });
 
+// Attach submit event to the form
+document.querySelector('form.upload-form').addEventListener('submit', showResultsOnSubmit);
+
 // Run on page load
-window.addEventListener("load", toggleUploadMode);
+window.addEventListener("load", () => {
+    toggleUploadMode();
+
+    // Make sure results stay visible if page was analyzed
+    const resultsSection = document.getElementById("resultsSection");
+    const clearButton = document.getElementById("clearButton");
+    {% if analyzed %}
+    if (resultsSection) {
+        resultsSection.style.display = "block";
+        clearButton.style.display = "block";
+    }
+    {% endif %}
+});
 </script>
 
   <!-- ROW 3: Top N -->
@@ -403,14 +436,14 @@ window.addEventListener("load", toggleUploadMode);
 {% if analyzed %}
 <form method="get" class="upload-form" style="display:inline;">
     <input type="hidden" name="analysis_mode" value="{{ 'compare' if not single_mode else 'single' }}">
-    <button type="submit" class="secondary-btn">Clear</button>
+    <button type="submit" id="clearButton" class="secondary-btn">Clear</button>
 </form>
 {% endif %}
 
 </div>
 
 {% if analyzed %}
-
+    <div id="resultsSection">
     <div class="view-toggle">
         <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
         <label for="listMode">📄 List View</label>
@@ -617,6 +650,8 @@ window.addEventListener("load", toggleUploadMode);
     <div class="card">
     <h2>Common Phrases (Bigrams)</h2>
     <canvas id="bigramsChart"></canvas>
+    </div>
+
     </div>
 
     </div>
