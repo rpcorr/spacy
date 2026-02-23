@@ -236,12 +236,14 @@ canvas {
    ========================== */
 .primary-btn,
 .secondary-btn {
+    font-size: 16px;
     padding: 10px 20px;
     border-radius: 8px;
     border: none;
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s ease;
+    text-decoration: none;
 }
 
 .primary-btn {
@@ -370,9 +372,14 @@ onchange="toggleUploadMode()">
     </div>
 
     <!-- ROW 4: Submit Button -->
-    <div class="form-row submit-row">
+    <div class="form-row submit-row" style="gap:10px;">
         <button type="submit" class="primary-btn">Analyze</button>
+
+        {% if analyzed %}
+            <a href="/" class="secondary-btn">Clear</a>
+        {% endif %}
     </div>
+
 
 </form>
 
