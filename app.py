@@ -374,17 +374,15 @@ onchange="toggleUploadMode()">
     <!-- ROW 4: Submit Button -->
     <div class="form-row submit-row" style="gap:10px;">
         <button type="submit" class="primary-btn">Analyze</button>
-
-        {% if analyzed %}
-            <form method="get" style="display:inline;">
-                <input type="hidden" name="analysis_mode" value="{{ 'compare' if not single_mode else 'single' }}">
-                <button type="submit" class="secondary-btn">Clear</button>
-            </form>
-        {% endif %}
     </div>
-
-
 </form>
+
+{% if analyzed %}
+<form method="get" class="upload-form" style="display:inline;">
+    <input type="hidden" name="analysis_mode" value="{{ 'compare' if not single_mode else 'single' }}">
+    <button type="submit" class="secondary-btn">Clear</button>
+</form>
+{% endif %}
 
 </div>
 
