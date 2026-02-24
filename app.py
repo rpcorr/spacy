@@ -558,6 +558,55 @@ window.addEventListener("load", () => {
             </p>
         </div>
     {% endmacro %}
+
+    {% macro dual_list_card(title, results1, results2, attr, single_mode, is_bigram=False, is_entity=False) %}
+    <div class="card">
+        <h3>{{ title }}</h3>
+
+        <div style="display:flex; gap:40px;">
+
+            <!-- LEFT COLUMN -->
+            <div>
+                <strong>{{ results1.file_name }}</strong>
+                <ul>
+                    {% for item, count in results1[attr] %}
+                        <li>
+                            {% if is_bigram %}
+                                {{ item[0] }} {{ item[1] }} — {{ count }}
+                            {% elif is_entity %}
+                                {{ item[0] }} ({{ item[1] }}) — {{ count }}
+                            {% else %}
+                                {{ item }} — {{ count }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {% if not single_mode %}
+            <!-- RIGHT COLUMN -->
+            <div>
+                <strong>{{ results2.file_name }}</strong>
+                <ul>
+                    {% for item, count in results2[attr] %}
+                        <li>
+                            {% if is_bigram %}
+                                {{ item[0] }} {{ item[1] }} — {{ count }}
+                            {% elif is_entity %}
+                                {{ item[0] }} ({{ item[1] }}) — {{ count }}
+                            {% else %}
+                                {{ item }} — {{ count }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endmacro %}
+
     <div id="resultsSection">
     <div class="view-toggle">
         <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
@@ -594,30 +643,13 @@ window.addEventListener("load", () => {
     <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
     <!-- COMMON WORDS CARD -->
-    <div class="card">
-    <h3>Top {{ top_n }} Common Words</h3>
-    <div style="display:flex; gap:40px;">
-    <div>
-    <strong>{{ results1.file_name }}</strong>
-    <ul>
-    {% for word, count in results1.common_words %}
-    <li>{{ word }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-
-    {% if not single_mode %}
-        <div>
-        <strong>{{ results2.file_name }}</strong>
-        <ul>
-        {% for word, count in results2.common_words %}
-        <li>{{ word }} — {{ count }}</li>
-        {% endfor %}
-        </ul>
-        </div>
-    {% endif %}
-    </div>
-    </div>
+    {{ dual_list_card(
+    "Top " ~ top_n ~ " Common Words",
+    results1,
+    results2,
+    "common_words",
+    single_mode
+) }}
 
 
     <!-- ENTITIES CARD -->
