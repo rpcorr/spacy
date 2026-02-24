@@ -608,35 +608,34 @@ window.addEventListener("load", () => {
     {% endmacro %}
 
     <div id="resultsSection">
-    <div class="view-toggle">
-        <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
-        <label for="listMode">📄 List View</label>
+        <div class="view-toggle">
+            <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
+            <label for="listMode">📄 List View</label>
 
-        <input type="radio" id="chartMode" name="viewMode" value="chart" onclick="toggleView()">
-        <label for="chartMode">📊 Chart View</label>
-    </div>
+            <input type="radio" id="chartMode" name="viewMode" value="chart" onclick="toggleView()">
+            <label for="chartMode">📊 Chart View</label>
+        </div>
 
     <div id="listView">
 
-    <div class="grid {% if not single_mode %}grid-2{% endif %}">
+        <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-    {{ result_card(results1) }}
+        {{ result_card(results1) }}
 
-    {% if not single_mode %}
-        {{ result_card(results2) }}
-    {% endif %}
+        {% if not single_mode %}
+            {{ result_card(results2) }}
+        {% endif %}
 
-    </div>
-
-    {% if not single_mode %}
-        <div class="card">
-            <h2>Vocabulary Comparison</h2>
-            <p>Shared Vocabulary: {{ comparison.shared }}</p>
-            <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
-            <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
         </div>
-    {% endif %}
 
+        {% if not single_mode %}
+            <div class="card">
+                <h2>Vocabulary Comparison</h2>
+                <p>Shared Vocabulary: {{ comparison.shared }}</p>
+                <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
+                <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
+            </div>
+        {% endif %}
 
 
     <!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
@@ -644,93 +643,43 @@ window.addEventListener("load", () => {
 
     <!-- COMMON WORDS CARD -->
     {{ dual_list_card(
-    "Top " ~ top_n ~ " Common Words",
-    results1,
-    results2,
-    "common_words",
-    single_mode
-) }}
+        "Top " ~ top_n ~ " Common Words",
+        results1,
+        results2,
+        "common_words",
+        single_mode
+    ) }}
 
 
     <!-- ENTITIES CARD -->
-    <div class="card">
-    <h3>Top {{ top_n }} Entities</h3>
-    <div style="display:flex; gap:40px;">
-    <div>
-    <strong>{{ results1.file_name }}</strong>
-    <ul>
-    {% for ent, count in results1.entities %}
-    <li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-
-    {% if not single_mode %}
-    <div>
-    <strong>{{ results2.file_name }}</strong>
-    <ul>
-    {% for ent, count in results2.entities %}
-    <li>{{ ent[0] }} ({{ ent[1] }}) — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-    {% endif %}
-    </div>
-    </div>
-
+    {{ dual_list_card(
+        "Top " ~ top_n ~ " Entities",
+        results1,
+        results2,
+        "entities",
+        single_mode,
+        False,
+        True
+    ) }}
 
     <!-- PRONOUNS CARD -->
-    <div class="card">
-    <h3>Top {{ top_n }} Pronouns</h3>
-    <div style="display:flex; gap:40px;">
-    <div>
-    <strong>{{ results1.file_name }}</strong>
-    <ul>
-    {% for word, count in results1.pronouns %}
-    <li>{{ word }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-
-    {% if not single_mode %}
-    <div>
-    <strong>{{ results2.file_name }}</strong>
-    <ul>
-    {% for word, count in results2.pronouns %}
-    <li>{{ word }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-    {% endif %}
-
-    </div>
-    </div>
-
+    {{ dual_list_card(
+        "Top " ~ top_n ~ " Pronouns",
+        results1,
+        results2,
+        "pronouns",
+        single_mode
+    ) }}
 
     <!-- COMMON PHRASES CARD -->
-    <div class="card">
-    <h3>Top {{ top_n }} Common Phrases (Bigrams)</h3>
-    <div style="display:flex; gap:40px;">
-    <div>
-    <strong>{{ results1.file_name }}</strong>
-    <ul>
-    {% for phrase, count in results1.bigrams %}
-    <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-
-    {% if not single_mode %}
-    <div>
-    <strong>{{ results2.file_name }}</strong>
-    <ul>
-    {% for phrase, count in results2.bigrams %}
-    <li>{{ phrase[0] }} {{ phrase[1] }} — {{ count }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-    {% endif %}
-    </div>
+    {{ dual_list_card(
+        "Top " ~ top_n ~ " Common Phrases (Bigrams)",
+        results1,
+        results2,
+        "bigrams",
+        single_mode,
+        True
+    ) }}
     </div>
 
     </div>
