@@ -607,6 +607,13 @@ window.addEventListener("load", () => {
     </div>
     {% endmacro %}
 
+    {% macro chart_card(title, chart_id) %}
+    <div class="card">
+        <h2>{{ title }}</h2>
+        <canvas id="{{ chart_id }}"></canvas>
+    </div>
+    {% endmacro %}
+
     <div id="resultsSection">
         <div class="view-toggle">
             <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
@@ -689,40 +696,21 @@ window.addEventListener("load", () => {
 
         <div id="chartView" style="display:none;">
 
-        <div class="grid {% if not single_mode %}grid-2{% endif %}">
+            <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-        {{ result_card(results1) }}
+            {{ result_card(results1) }}
 
-        {% if not single_mode %}
-            {{ result_card(results2) }}
-        {% endif %}
+            {% if not single_mode %}
+                {{ result_card(results2) }}
+            {% endif %}
 
-        </div>
+            </div>
 
-        <div class="card">
-        <h2>Sentence & Word Comparison</h2>
-        <canvas id="statsChart"></canvas>
-        </div>
-
-        <div class="card">
-        <h2>Common Words</h2>
-        <canvas id="wordsChart"></canvas>
-        </div>
-
-        <div class="card">
-        <h2>Entities</h2>
-        <canvas id="entitiesChart"></canvas>
-        </div>
-
-        <div class="card">
-        <h2>Pronouns</h2>
-        <canvas id="pronounsChart"></canvas>
-        </div>
-
-        <div class="card">
-        <h2>Common Phrases (Bigrams)</h2>
-        <canvas id="bigramsChart"></canvas>
-        </div>
+            {{ chart_card("Sentence & Word Comparison", "statsChart") }}
+            {{ chart_card("Common Words", "wordsChart") }}
+            {{ chart_card("Entities", "entitiesChart") }}
+            {{ chart_card("Pronouns", "pronounsChart") }}
+            {{ chart_card("Common Phrases (Bigrams)", "bigramsChart") }}
 
         </div>
 
@@ -731,109 +719,143 @@ window.addEventListener("load", () => {
     <script>
     Chart.register(ChartDataLabels);
 
-    const chartOptions = {
-    responsive:true,
-    maintainAspectRatio:false,
-    plugins:{ datalabels:{ anchor:'end', align:'end', font:{weight:'bold'} } },
-    scales:{ y:{ beginAtZero:true } }
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        datalabels: {
+            anchor: 'end',
+            align: 'end',
+            font: { weight: 'bold' }
+        }
+    },
+    scales: {
+        y: { beginAtZero: true }
+    }
+};
+
+function createChart(config) {
+    const ctx = document.getElementById(config.id);
+    if (!ctx) return;
+
+    const datasets = [
+        {
+            label: config.label1,
+            data: config.data1,
+            backgroundColor: "rgba(54,162,235,0.6)"
+        }
+    ];
+
+    if (config.data2 && config.data2.length > 0) {
+        datasets.push({
+            label: config.label2,
+            data: config.data2,
+            backgroundColor: "rgba(255,99,132,0.6)"
+        });
+    }
+
+    const options = {
+        ...chartOptions
     };
 
-    function createGroupedChart(id, labels, data1, data2){
-    new Chart(document.getElementById(id),{
-    type:'bar',
-    data:{
-    labels:labels,
-    datasets:[
-    {label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
-    {% if not single_mode %}
-    ,
-    {label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
-    {% endif %}
-    ]
-    },
-    options:chartOptions
-    });
+    if (config.suggestedMax) {
+        options.scales = {
+            y: {
+                beginAtZero: true,
+                suggestedMax: config.suggestedMax
+            }
+        };
     }
 
-    createGroupedChart("statsChart",
-    ["Sentences","Words"],
-    [{{ results1.sentences }},{{ results1.words }}]
-    {% if not single_mode and results2 %}
-    ,
-    [{{ results2.sentences }},{{ results2.words }}]
-    {% else %}
-    ,
-    []
-    {% endif %}
-    );
-
-    createGroupedChart("wordsChart",
-    {{ results1.common_words | map(attribute=0) | list | safe }},
-    {{ results1.common_words | map(attribute=1) | list | safe }}
-    {% if not single_mode and results2 %}
-    ,
-    {{ results2.common_words | map(attribute=1) | list | safe }}
-    {% else %}
-    ,
-    []
-    {% endif %}
-    );
-
-    createGroupedChart("entitiesChart",
-    {{ results1.entity_labels | safe }},
-    {{ results1.entities | map(attribute=1) | list | safe }}
-    {% if not single_mode and results2 %}
-    ,
-    {{ results2.entities | map(attribute=1) | list | safe }}
-    {% else %}
-    ,
-    []
-    {% endif %}
-    );
-
-    createGroupedChart("pronounsChart",
-    {{ results1.pronouns | map(attribute=0) | list | safe }},
-    {{ results1.pronouns | map(attribute=1) | list | safe }}
-    {% if not single_mode and results2 %}
-    ,
-    {{ results2.pronouns | map(attribute=1) | list | safe }}
-    {% else %}
-    ,
-    []
-    {% endif %}
-    );
-
-
-    const bigramLabels={{ results1.bigrams | map(attribute=0) | map('join',' ') | list | safe }};
-    const data1={{ results1.bigrams | map(attribute=1) | list | safe }};
-    {% if not single_mode and results2 %}
-        const data2={{ results2.bigrams | map(attribute=1) | list | safe }};
-    {% else %}
-        const data2=[];
-    {% endif %}
-
-    const maxVal=Math.max(...data1,...data2);
-
-    new Chart(document.getElementById("bigramsChart"),{
-    type:'bar',
-    data:{labels:bigramLabels,
-    datasets:[
-    {label:"{{ results1.file_name }}", data:data1, backgroundColor:"rgba(54,162,235,0.6)"}
-    {% if not single_mode %}
-    ,
-    {label:"{{ results2.file_name }}", data:data2, backgroundColor:"rgba(255,99,132,0.6)"}
-    {% endif %}
-    ]
-    },
-    options:{...chartOptions,
-    scales:{y:{beginAtZero:true,suggestedMax:maxVal+0.5}}}
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: config.labels,
+            datasets: datasets
+        },
+        options: options
     });
+}
 
-    function toggleView(){
-    const selected=document.querySelector('input[name="viewMode"]:checked').value;
-    document.getElementById("listView").style.display=selected==="list"?"block":"none";
-    document.getElementById("chartView").style.display=selected==="chart"?"block":"none";
-    }
+    createChart({
+    id: "statsChart",
+    labels: ["Sentences", "Words"],
+    label1: "{{ results1.file_name }}",
+    data1: [{{ results1.sentences }}, {{ results1.words }}],
+    label2: "{{ results2.file_name if not single_mode and results2 else '' }}",
+    data2: {% if not single_mode and results2 %}
+        [{{ results2.sentences }}, {{ results2.words }}]
+    {% else %}
+        []
+    {% endif %}
+});
+
+    createChart({
+    id: "wordsChart",
+    labels: {{ results1.common_words | map(attribute=0) | list | safe }},
+    label1: "{{ results1.file_name }}",
+    data1: {{ results1.common_words | map(attribute=1) | list | safe }},
+    label2: "{{ results2.file_name if not single_mode and results2 else '' }}",
+    data2: {% if not single_mode and results2 %}
+        {{ results2.common_words | map(attribute=1) | list | safe }}
+    {% else %}
+        []
+    {% endif %}
+});
+
+    createChart({
+    id: "entitiesChart",
+    labels: {{ results1.entity_labels | safe }},
+    label1: "{{ results1.file_name }}",
+    data1: {{ results1.entities | map(attribute=1) | list | safe }},
+    label2: "{{ results2.file_name if not single_mode and results2 else '' }}",
+    data2: {% if not single_mode and results2 %}
+        {{ results2.entities | map(attribute=1) | list | safe }}
+    {% else %}
+        []
+    {% endif %}
+});
+
+    createChart({
+    id: "pronounsChart",
+    labels: {{ results1.pronouns | map(attribute=0) | list | safe }},
+    label1: "{{ results1.file_name }}",
+    data1: {{ results1.pronouns | map(attribute=1) | list | safe }},
+    label2: "{{ results2.file_name if not single_mode and results2 else '' }}",
+    data2: {% if not single_mode and results2 %}
+        {{ results2.pronouns | map(attribute=1) | list | safe }}
+    {% else %}
+        []
+    {% endif %}
+});
+
+
+    const bigramData1 = {{ results1.bigrams | map(attribute=1) | list | safe }};
+{% if not single_mode and results2 %}
+    const bigramData2 = {{ results2.bigrams | map(attribute=1) | list | safe }};
+{% else %}
+    const bigramData2 = [];
+{% endif %}
+
+const maxBigram = Math.max(...bigramData1, ...bigramData2);
+
+createChart({
+    id: "bigramsChart",
+    labels: {{ results1.bigrams | map(attribute=0) | map('join',' ') | list | safe }},
+    label1: "{{ results1.file_name }}",
+    data1: bigramData1,
+    label2: "{{ results2.file_name if not single_mode and results2 else '' }}",
+    data2: bigramData2,
+    suggestedMax: maxBigram + 0.5
+});
+
+    function toggleView() {
+    const selected = document.querySelector('input[name="viewMode"]:checked').value;
+    document.getElementById("listView").style.display =
+        selected === "list" ? "block" : "none";
+    document.getElementById("chartView").style.display =
+        selected === "chart" ? "block" : "none";
+}
     </script>
 
 {% endif %}
