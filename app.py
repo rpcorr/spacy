@@ -616,7 +616,78 @@ window.addEventListener("load", () => {
             <label for="chartMode">📊 Chart View</label>
         </div>
 
-    <div id="listView">
+        <div id="listView">
+
+            <div class="grid {% if not single_mode %}grid-2{% endif %}">
+
+            {{ result_card(results1) }}
+
+            {% if not single_mode %}
+                {{ result_card(results2) }}
+            {% endif %}
+
+            </div>
+
+            {% if not single_mode %}
+                <div class="card">
+                    <h2>Vocabulary Comparison</h2>
+                    <p>Shared Vocabulary: {{ comparison.shared }}</p>
+                    <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
+                    <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
+                </div>
+            {% endif %}
+
+
+        <!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
+        <div class="grid {% if not single_mode %}grid-2{% endif %}">
+
+        <!-- COMMON WORDS CARD -->
+        {{ dual_list_card(
+            "Top " ~ top_n ~ " Common Words",
+            results1,
+            results2,
+            "common_words",
+            single_mode
+        ) }}
+
+
+        <!-- ENTITIES CARD -->
+        {{ dual_list_card(
+            "Top " ~ top_n ~ " Entities",
+            results1,
+            results2,
+            "entities",
+            single_mode,
+            False,
+            True
+        ) }}
+
+        <!-- PRONOUNS CARD -->
+        {{ dual_list_card(
+            "Top " ~ top_n ~ " Pronouns",
+            results1,
+            results2,
+            "pronouns",
+            single_mode
+        ) }}
+
+        <!-- COMMON PHRASES CARD -->
+        {{ dual_list_card(
+            "Top " ~ top_n ~ " Common Phrases (Bigrams)",
+            results1,
+            results2,
+            "bigrams",
+            single_mode,
+            True
+        ) }}
+        </div>
+
+        </div>
+
+        </div>
+
+
+        <div id="chartView" style="display:none;">
 
         <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
@@ -628,105 +699,34 @@ window.addEventListener("load", () => {
 
         </div>
 
-        {% if not single_mode %}
-            <div class="card">
-                <h2>Vocabulary Comparison</h2>
-                <p>Shared Vocabulary: {{ comparison.shared }}</p>
-                <p>Unique to {{ results1.file_name }}: {{ comparison.unique_1 }}</p>
-                <p>Unique to {{ results2.file_name }}: {{ comparison.unique_2 }}</p>
-            </div>
-        {% endif %}
+        <div class="card">
+        <h2>Sentence & Word Comparison</h2>
+        <canvas id="statsChart"></canvas>
+        </div>
 
+        <div class="card">
+        <h2>Common Words</h2>
+        <canvas id="wordsChart"></canvas>
+        </div>
 
-    <!-- TOP ANALYSIS SECTIONS SIDE BY SIDE -->
-    <div class="grid {% if not single_mode %}grid-2{% endif %}">
+        <div class="card">
+        <h2>Entities</h2>
+        <canvas id="entitiesChart"></canvas>
+        </div>
 
-    <!-- COMMON WORDS CARD -->
-    {{ dual_list_card(
-        "Top " ~ top_n ~ " Common Words",
-        results1,
-        results2,
-        "common_words",
-        single_mode
-    ) }}
+        <div class="card">
+        <h2>Pronouns</h2>
+        <canvas id="pronounsChart"></canvas>
+        </div>
 
+        <div class="card">
+        <h2>Common Phrases (Bigrams)</h2>
+        <canvas id="bigramsChart"></canvas>
+        </div>
 
-    <!-- ENTITIES CARD -->
-    {{ dual_list_card(
-        "Top " ~ top_n ~ " Entities",
-        results1,
-        results2,
-        "entities",
-        single_mode,
-        False,
-        True
-    ) }}
+        </div>
 
-    <!-- PRONOUNS CARD -->
-    {{ dual_list_card(
-        "Top " ~ top_n ~ " Pronouns",
-        results1,
-        results2,
-        "pronouns",
-        single_mode
-    ) }}
-
-    <!-- COMMON PHRASES CARD -->
-    {{ dual_list_card(
-        "Top " ~ top_n ~ " Common Phrases (Bigrams)",
-        results1,
-        results2,
-        "bigrams",
-        single_mode,
-        True
-    ) }}
-    </div>
-
-    </div>
-
-    </div>
-
-
-    <div id="chartView" style="display:none;">
-
-    <div class="grid {% if not single_mode %}grid-2{% endif %}">
-
-    {{ result_card(results1) }}
-
-    {% if not single_mode %}
-        {{ result_card(results2) }}
-    {% endif %}
-
-    </div>
-
-    <div class="card">
-    <h2>Sentence & Word Comparison</h2>
-    <canvas id="statsChart"></canvas>
-    </div>
-
-    <div class="card">
-    <h2>Common Words</h2>
-    <canvas id="wordsChart"></canvas>
-    </div>
-
-    <div class="card">
-    <h2>Entities</h2>
-    <canvas id="entitiesChart"></canvas>
-    </div>
-
-    <div class="card">
-    <h2>Pronouns</h2>
-    <canvas id="pronounsChart"></canvas>
-    </div>
-
-    <div class="card">
-    <h2>Common Phrases (Bigrams)</h2>
-    <canvas id="bigramsChart"></canvas>
-    </div>
-
-    </div>
-
-    </div>
+</div>
 
     <script>
     Chart.register(ChartDataLabels);
