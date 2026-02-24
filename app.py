@@ -535,6 +535,29 @@ window.addEventListener("load", () => {
 </div>
 
 {% if analyzed %}
+
+    {% macro result_card(results) %}
+        <div class="card">
+            <h2>{{ results.file_name }}</h2>
+
+            <p><strong>Overview</strong></p>
+            <p>Sentences: {{ results.sentences }}</p>
+            <p>Words: {{ results.words }}</p>
+            <p>Avg Sentence Length: {{ results.avg_sentence_length }}</p>
+            <p>Avg Max. Dependency Distance: {{ results.average_mdd }}</p>
+
+            <p><strong>Readability</strong></p>
+            <p>Flesch Reading Ease: {{ results.flesch_reading_ease }}</p>
+            <p>Grade Level: {{ results.flesch_kincaid_grade }}</p>
+
+            <p><strong>Sentiment</strong></p>
+            <p>
+                {{ results.sentiment.sentiment }}
+                (Polarity: {{ results.sentiment.polarity }},
+                Subjectivity: {{ results.sentiment.subjectivity }})
+            </p>
+        </div>
+    {% endmacro %}
     <div id="resultsSection">
     <div class="view-toggle">
         <input type="radio" id="listMode" name="viewMode" value="list" checked onclick="toggleView()">
@@ -548,31 +571,10 @@ window.addEventListener("load", () => {
 
     <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-    <div class="card">
-    <h2>{{ results1.file_name }}</h2>
-    <p><strong>Overview</strong></p>
-    <p>Sentences: {{ results1.sentences }}</p>
-    <p>Words: {{ results1.words }}</p>
-    <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-    <p>Avg Max. Dependacy Distance: {{ results1.average_mdd }}</p>
-    <p>Readability: {{ results1.flesch_reading_ease }}</p>
-    <p>Grade Level: {{ results1.flesch_kincaid_grade }}</p>
-    <p>Sentiment: {{ results1.sentiment.sentiment }} (Polarity: {{ results1.sentiment.polarity }}, Subjectivity: {{ results1.sentiment.subjectivity }})</p>
-    
-    </div>
+    {{ result_card(results1) }}
 
     {% if not single_mode %}
-        <div class="card">
-            <h2>{{ results2.file_name }}</h2>
-            <p><strong>Overview</strong></p>
-            <p>Sentences: {{ results2.sentences }}</p>
-            <p>Words: {{ results2.words }}</p>
-            <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-            <p>Avg Max. Dependacy Distance: {{ results2.average_mdd }}</p>
-            <p>Readability: {{ results2.flesch_reading_ease }}</p>
-            <p>Grade Level: {{ results2.flesch_kincaid_grade }}</p>
-            <p>Sentiment: {{ results2.sentiment.sentiment }} (Polarity: {{ results2.sentiment.polarity }}, Subjectivity: {{ results2.sentiment.subjectivity }})</p>
-        </div>
+        {{ result_card(results2) }}
     {% endif %}
 
     </div>
@@ -708,30 +710,10 @@ window.addEventListener("load", () => {
 
     <div class="grid {% if not single_mode %}grid-2{% endif %}">
 
-    <div class="card">
-    <h2>{{ results1.file_name }}</h2>
-    <p><strong>Overview</strong></p>
-    <p>Sentences: {{ results1.sentences }}</p>
-    <p>Words: {{ results1.words }}</p>
-    <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-    <p>Avg Max. Dependacy Distance: {{ results1.average_mdd }}</p>
-    <p>Readability: {{ results1.flesch_reading_ease }}</p>
-    <p>Grade Level: {{ results1.flesch_kincaid_grade }}</p>
-    <p>Sentiment: {{ results1.sentiment.sentiment }} (Polarity: {{ results1.sentiment.polarity }}, Subjectivity: {{ results1.sentiment.subjectivity }})</p>
-    </div>
+    {{ result_card(results1) }}
 
     {% if not single_mode %}
-    <div class="card">
-    <h2>{{ results2.file_name }}</h2>
-    <p><strong>Overview</strong></p>
-    <p>Sentences: {{ results2.sentences }}</p>
-    <p>Words: {{ results2.words }}</p>
-    <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-    <p>Avg Max. Dependacy Distance: {{ results2.average_mdd }}</p>
-    <p>Readability: {{ results2.flesch_reading_ease }}</p>
-    <p>Grade Level: {{ results2.flesch_kincaid_grade }}</p>
-    <p>Sentiment: {{ results2.sentiment.sentiment }} (Polarity: {{ results2.sentiment.polarity }}, Subjectivity: {{ results2.sentiment.subjectivity }})</p>
-    </div>
+        {{ result_card(results2) }}
     {% endif %}
 
     </div>
