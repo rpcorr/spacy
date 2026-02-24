@@ -92,6 +92,7 @@ def home():
 
         if file1 and file1.filename:
             text1 = extract_text_from_file(file1)
+            file1_name = file1.filename
 
         if file2 and file2.filename:
             text2 = extract_text_from_file(file2)
