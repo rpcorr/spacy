@@ -481,6 +481,7 @@ window.addEventListener("load", () => {
 
     <div class="card">
     <h2>{{ results1.file_name }}</h2>
+    <strong>Overview</strong>
     <p>Sentences: {{ results1.sentences }}</p>
     <p>Words: {{ results1.words }}</p>
     <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
@@ -490,6 +491,7 @@ window.addEventListener("load", () => {
     {% if not single_mode %}
         <div class="card">
             <h2>{{ results2.file_name }}</h2>
+            <strong>Overview</strong>
             <p>Sentences: {{ results2.sentences }}</p>
             <p>Words: {{ results2.words }}</p>
             <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
