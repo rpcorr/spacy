@@ -550,7 +550,7 @@ window.addEventListener("load", () => {
 
     <div class="card">
     <h2>{{ results1.file_name }}</h2>
-    <strong>Overview</strong>
+    <p><strong>Overview</strong></p>
     <p>Sentences: {{ results1.sentences }}</p>
     <p>Words: {{ results1.words }}</p>
     <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
@@ -564,7 +564,7 @@ window.addEventListener("load", () => {
     {% if not single_mode %}
         <div class="card">
             <h2>{{ results2.file_name }}</h2>
-            <strong>Overview</strong>
+            <p><strong>Overview</strong></p>
             <p>Sentences: {{ results2.sentences }}</p>
             <p>Words: {{ results2.words }}</p>
             <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
@@ -710,19 +710,27 @@ window.addEventListener("load", () => {
 
     <div class="card">
     <h2>{{ results1.file_name }}</h2>
+    <p><strong>Overview</strong></p>
     <p>Sentences: {{ results1.sentences }}</p>
     <p>Words: {{ results1.words }}</p>
     <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-    <p>Avg MDD: {{ results1.average_mdd }}</p>
+    <p>Avg Max. Dependacy Distance: {{ results1.average_mdd }}</p>
+    <p>Readability: {{ results1.flesch_reading_ease }}</p>
+    <p>Grade Level: {{ results1.flesch_kincaid_grade }}</p>
+    <p>Sentiment: {{ results1.sentiment.sentiment }} (Polarity: {{ results1.sentiment.polarity }}, Subjectivity: {{ results1.sentiment.subjectivity }})</p>
     </div>
 
     {% if not single_mode %}
     <div class="card">
     <h2>{{ results2.file_name }}</h2>
+    <p><strong>Overview</strong></p>
     <p>Sentences: {{ results2.sentences }}</p>
     <p>Words: {{ results2.words }}</p>
     <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-    <p>Avg MDD: {{ results2.average_mdd }}</p>
+    <p>Avg Max. Dependacy Distance: {{ results2.average_mdd }}</p>
+    <p>Readability: {{ results2.flesch_reading_ease }}</p>
+    <p>Grade Level: {{ results2.flesch_kincaid_grade }}</p>
+    <p>Sentiment: {{ results2.sentiment.sentiment }} (Polarity: {{ results2.sentiment.polarity }}, Subjectivity: {{ results2.sentiment.subjectivity }})</p>
     </div>
     {% endif %}
 
