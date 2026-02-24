@@ -5,6 +5,7 @@ from docx import Document
 from PyPDF2 import PdfReader
 import spacy
 from collections import Counter
+from textblob import TextBlob
 
 app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
@@ -54,11 +55,30 @@ def count_syllables(word):
 
     return max(1, syllables)
 
+def analyze_sentiment(text):
+    blob = TextBlob(text)
+    polarity = blob.sentiment.polarity  # -1 (negative) to +1 (positive)
+    subjectivity = blob.sentiment.subjectivity  # 0 (objective) to 1 (subjective)
+    
+    if polarity > 0.1:
+        sentiment = "Positive"
+    elif polarity < -0.1:
+        sentiment = "Negative"
+    else:
+        sentiment = "Neutral"
+
+    return {
+        "polarity": round(polarity, 2),
+        "subjectivity": round(subjectivity, 2),
+        "sentiment": sentiment
+    }
+
 def analyze_text(text, file_name, top_n=10):
     doc = nlp(text)
 
     sentences = list(doc.sents)
     words = [t for t in doc if t.is_alpha]
+
     avg_sentence_length = len(words) / len(sentences) if sentences else 0
 
     # MDD
@@ -67,11 +87,13 @@ def analyze_text(text, file_name, top_n=10):
         distances = [abs(token.i - token.head.i) for token in sent if token.is_alpha]
         if distances:
             mdd_list.append(max(distances))
+
     average_mdd = sum(mdd_list) / len(mdd_list) if mdd_list else 0
 
+    # Lemmas & counts
     lemmas = [token.lemma_.lower() for token in doc if token.is_alpha and not token.is_stop]
-
     common_words = Counter(lemmas).most_common(top_n)
+
     entity_counts = Counter([(ent.text, ent.label_) for ent in doc.ents]).most_common(top_n)
     entity_labels = [f"{ent[0]} ({ent[1]})" for ent, _ in entity_counts]
 
@@ -81,9 +103,8 @@ def analyze_text(text, file_name, top_n=10):
     bigrams = list(zip(lemmas, lemmas[1:]))
     bigram_counts = Counter(bigrams).most_common(top_n)
 
+    # 🔹 Readability Calculation
     total_syllables = sum(count_syllables(token.text) for token in words)
-
-    avg_sentence_length = len(words) / len(sentences) if sentences else 0
     avg_syllables_per_word = total_syllables / len(words) if words else 0
 
     flesch_reading_ease = (
@@ -98,6 +119,9 @@ def analyze_text(text, file_name, top_n=10):
         - 15.59
     )
 
+    # 🔹 Sentiment
+    sentiment = analyze_sentiment(text)
+
     return {
         "file_name": file_name,
         "sentences": len(sentences),
@@ -111,7 +135,8 @@ def analyze_text(text, file_name, top_n=10):
         "bigrams": bigram_counts,
         "lemmas_set": set(lemmas),
         "flesch_reading_ease": round(flesch_reading_ease, 2),
-        "flesch_kincaid_grade": round(flesch_kincaid_grade, 2)
+        "flesch_kincaid_grade": round(flesch_kincaid_grade, 2),
+        "sentiment": sentiment
     }
 
 
@@ -532,6 +557,8 @@ window.addEventListener("load", () => {
     <p>Avg Max. Dependacy Distance: {{ results1.average_mdd }}</p>
     <p>Readability: {{ results1.flesch_reading_ease }}</p>
     <p>Grade Level: {{ results1.flesch_kincaid_grade }}</p>
+    <p>Sentiment: {{ results1.sentiment.sentiment }} (Polarity: {{ results1.sentiment.polarity }}, Subjectivity: {{ results1.sentiment.subjectivity }})</p>
+    
     </div>
 
     {% if not single_mode %}
@@ -544,6 +571,7 @@ window.addEventListener("load", () => {
             <p>Avg Max. Dependacy Distance: {{ results2.average_mdd }}</p>
             <p>Readability: {{ results2.flesch_reading_ease }}</p>
             <p>Grade Level: {{ results2.flesch_kincaid_grade }}</p>
+            <p>Sentiment: {{ results2.sentiment.sentiment }} (Polarity: {{ results2.sentiment.polarity }}, Subjectivity: {{ results2.sentiment.subjectivity }})</p>
         </div>
     {% endif %}
 
