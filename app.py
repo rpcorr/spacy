@@ -1,5 +1,6 @@
 from flask import Flask, render_template_string, request
-import os 
+import os
+import re
 from docx import Document
 from PyPDF2 import PdfReader
 import spacy
@@ -29,6 +30,30 @@ def extract_text_from_file(file_storage):
     else:
         return None
 
+def count_syllables(word):
+    word = word.lower()
+    word = re.sub(r'[^a-z]', '', word)
+
+    if len(word) == 0:
+        return 0
+
+    vowels = "aeiouy"
+    syllables = 0
+    prev_char_was_vowel = False
+
+    for char in word:
+        if char in vowels:
+            if not prev_char_was_vowel:
+                syllables += 1
+            prev_char_was_vowel = True
+        else:
+            prev_char_was_vowel = False
+
+    if word.endswith("e"):
+        syllables = max(1, syllables - 1)
+
+    return max(1, syllables)
+
 def analyze_text(text, file_name, top_n=10):
     doc = nlp(text)
 
@@ -56,6 +81,23 @@ def analyze_text(text, file_name, top_n=10):
     bigrams = list(zip(lemmas, lemmas[1:]))
     bigram_counts = Counter(bigrams).most_common(top_n)
 
+    total_syllables = sum(count_syllables(token.text) for token in words)
+
+    avg_sentence_length = len(words) / len(sentences) if sentences else 0
+    avg_syllables_per_word = total_syllables / len(words) if words else 0
+
+    flesch_reading_ease = (
+        206.835
+        - (1.015 * avg_sentence_length)
+        - (84.6 * avg_syllables_per_word)
+    )
+
+    flesch_kincaid_grade = (
+        (0.39 * avg_sentence_length)
+        + (11.8 * avg_syllables_per_word)
+        - 15.59
+    )
+
     return {
         "file_name": file_name,
         "sentences": len(sentences),
@@ -67,7 +109,9 @@ def analyze_text(text, file_name, top_n=10):
         "entity_labels": entity_labels,
         "pronouns": pronoun_counts,
         "bigrams": bigram_counts,
-        "lemmas_set": set(lemmas)
+        "lemmas_set": set(lemmas),
+        "flesch_reading_ease": round(flesch_reading_ease, 2),
+        "flesch_kincaid_grade": round(flesch_kincaid_grade, 2)
     }
 
 
@@ -485,7 +529,9 @@ window.addEventListener("load", () => {
     <p>Sentences: {{ results1.sentences }}</p>
     <p>Words: {{ results1.words }}</p>
     <p>Avg Sentence Length: {{ results1.avg_sentence_length }}</p>
-    <p>Avg MDD: {{ results1.average_mdd }}</p>
+    <p>Avg Max. Dependacy Distance: {{ results1.average_mdd }}</p>
+    <p>Readability: {{ results1.flesch_reading_ease }}</p>
+    <p>Grade Level: {{ results1.flesch_kincaid_grade }}</p>
     </div>
 
     {% if not single_mode %}
@@ -495,7 +541,9 @@ window.addEventListener("load", () => {
             <p>Sentences: {{ results2.sentences }}</p>
             <p>Words: {{ results2.words }}</p>
             <p>Avg Sentence Length: {{ results2.avg_sentence_length }}</p>
-            <p>Avg MDD: {{ results2.average_mdd }}</p>
+            <p>Avg Max. Dependacy Distance: {{ results2.average_mdd }}</p>
+            <p>Readability: {{ results2.flesch_reading_ease }}</p>
+            <p>Grade Level: {{ results2.flesch_kincaid_grade }}</p>
         </div>
     {% endif %}
 
