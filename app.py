@@ -1,10 +1,33 @@
 from flask import Flask, render_template_string, request
-
+import os 
+from docx import Document
+from PyPDF2 import PdfReader
 import spacy
 from collections import Counter
 
 app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
+
+def extract_text_from_file(file_storage):
+    filename = file_storage.filename
+    ext = os.path.splitext(filename)[1].lower()
+
+    if ext == ".txt":
+        return file_storage.read().decode("utf-8")
+
+    elif ext == ".docx":
+        doc = Document(file_storage)
+        return "\n".join([p.text for p in doc.paragraphs])
+
+    elif ext == ".pdf":
+        reader = PdfReader(file_storage)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or ""
+        return text
+
+    else:
+        return None
 
 def analyze_text(text, file_name, top_n=10):
     doc = nlp(text)
@@ -68,11 +91,10 @@ def home():
         file2 = request.files.get("file2")
 
         if file1 and file1.filename:
-            text1 = file1.read().decode("utf-8")
-            file1_name = file1.filename
+            text1 = extract_text_from_file(file1)
 
         if file2 and file2.filename:
-            text2 = file2.read().decode("utf-8")
+            text2 = extract_text_from_file(file2)
             file2_name = file2.filename
 
     single_mode = analysis_mode != "compare"
@@ -352,12 +374,12 @@ canvas {
 <div class="form-row upload-row">
     <div>
         <label>Upload Speech A</label>
-        <input type="file" name="file1" accept=".txt" required>
+        <input type="file" name="file1" accept=".txt,.docx,.pdf" required>
     </div>
 
     <div id="file2Row" style="display: {% if single_mode %}none{% else %}block{% endif %};">
         <label>Upload Speech B</label>
-        <input type="file" name="file2" accept=".txt" {% if not single_mode %}required{% endif %}>
+        <input type="file" name="file2" accept=".txt,.docx,.pdf" {% if not single_mode %}required{% endif %}>
     </div>
 
 </div>
